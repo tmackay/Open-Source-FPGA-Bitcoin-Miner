@@ -8,7 +8,8 @@
 
 # * output file in .svf format, can be generated from .sof by
 # quartus_pgmw. In the Quartus GUI this is
-# Tools->Programmer->File->Create...
+# Tools->Programmer->File->Create... and the command line is
+# quartus_cpf -c -q 12.0MHz -g 3.3 -n p $SOF_FILE $SVF_FILE
 
 # * BSDL file for the FPGA
 
