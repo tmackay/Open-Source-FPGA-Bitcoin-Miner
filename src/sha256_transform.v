@@ -173,7 +173,7 @@ module sha256_transform #(
 					wire [31:0] fb_w1; wire[31:0] nonfb_w1;
 					if(LOOP != 1)
 						shifter_32b #(.LENGTH(9)) shift_w1_fb (clk, HASHERS[NUM_ROUNDS/LOOP+i-8].cur_w9, fb_w1);
-					shifter_32b #(.LENGTH(i)) shift_w1 (clk, rx_input_d[`IDX(1+i)], nonfb_w1);
+					shifter_32b #(.LENGTH(i+1), .LEN_THRESH(6)) shift_w1 (clk, rx_input[`IDX(1+i)], nonfb_w1);
 					if(LOOP == 1)
 						assign cur_w1 = nonfb_w1;
 					else
@@ -214,7 +214,7 @@ module sha256_transform #(
 						shifter_32b #(.LENGTH(6)) shift_w9_fb (clk, HASHERS[NUM_ROUNDS/LOOP-5].cur_w14, fb_w9);
 					if(LOOP == 1)
 						assign cur_w9 = rx_input_d[319:288];
-					else
+					else 
 						assign cur_w9 = feedback_r ? fb_w9 : rx_input_d[319:288];
 				end
 				else if(i < 5)
@@ -372,7 +372,8 @@ module sha256_digester (clk, k_next, rx_state, rx_t1_part, rx_w1,
 endmodule
 
 module shifter_32b #(
-	parameter LENGTH = 1
+	parameter LENGTH = 1,
+	parameter LEN_THRESH = 5
 ) (
 	input clk,
 	input [31:0] val_in,
@@ -380,7 +381,7 @@ module shifter_32b #(
 );
 generate
 `ifdef USE_EXPLICIT_ALTSHIFT_FOR_W
-	if(LENGTH >= 4) begin
+	if(LENGTH >= LEN_THRESH) begin
 		altshift_taps #(.number_of_taps(1), .tap_distance(LENGTH), .width(32)) shifttaps
 		( .clken(1'b1), .aclr(1'b0), .clock(clk), .shiftin(val_in), .taps(), .shiftout(val_out) ); 
 	end else begin
