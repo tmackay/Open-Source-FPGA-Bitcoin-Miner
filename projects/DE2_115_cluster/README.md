@@ -23,6 +23,9 @@ Design
  
 * miner.py is exactly the same as for a single miner.
 
+* Since the links are asynchronous, the hardware can be somewhat
+  heterogeneous. For example, the hub FPGA could host one miner, and
+  other miners could be external.
 
 Caveats
 -------
@@ -34,10 +37,10 @@ Caveats
   nonce overflows, it will start from a different initial value. Over
   time, as different miners drift in frequency, and have different
   start times, the nonce ranges start to overlap. So this is not a
-  problem for single-chip clusters.
+  problem for single-chip clusters, they could use any number.
 
-* Miners should probably run at the same hashrate, to cover the nonce
-  space evenly.
+* Miners should probably run at roughly the same hashrate, to cover
+  the nonce space evenly.
 
 
 Current implementation
