@@ -64,12 +64,5 @@ clock. Proceed building the project fpgaminer as usual.
 Current problems
 ----------------
 
-So far, I am only getting results from one of the two miners,
-depending on the kind of mux used for collecting results:
-
-* For the primitive "and" mux (commented out), only odd numbers
-
-* For the properly caching mux, only even numbers
-
-From the schematic view, my mux logic looks symmetric in each case, so
-this may be a more subtle error, such as a timing issue...
+So far, I am only getting results from one of the two miners. Which
+one it is, seems to very from build to build...
