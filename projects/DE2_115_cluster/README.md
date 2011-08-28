@@ -31,11 +31,18 @@ Design
 Scaling
 -------
 
-Hubs can be daisy chained for big clusters. The serial port can handle
-about 2880 results/s, corresponding to a limit of about 12 Thash/s for
-one cluster. Even with tight bursts of results, the caching in hubs
-should help avoid lost results (though only one result per input port
-is cached). Nevertheless, real-world scaling remains to be seen.
+* Hubs can be daisy chained for big clusters. The serial port can
+  handle about 2880 results/s, corresponding to a limit of about 12
+  Thash/s for one cluster. Even with tight bursts of results, the
+  caching in hubs should help avoid lost results (though only one
+  result per input port is cached). Nevertheless, real-world scaling
+  remains to be seen.
+
+* A hub does not care how many miners there are. The mux/cache code is
+  only about the available ports. However, each miner must know the
+  total number, as it equals the nonce stride, and have a distinct
+  nonce start. This means building a new .sof/.bit for each node,
+  unless nonce_start could be set with a switch, for example.
 
 
 Caveats
