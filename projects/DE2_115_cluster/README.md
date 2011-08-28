@@ -60,9 +60,3 @@ http://www.fpga4fun.com/files/async.zip
 Change the clock frequency in both async_* files to match the hash
 clock. Proceed building the project fpgaminer as usual.
 
-
-Current problems
-----------------
-
-So far, I am only getting results from one of the two miners. Which
-one it is, seems to vary from build to build...
