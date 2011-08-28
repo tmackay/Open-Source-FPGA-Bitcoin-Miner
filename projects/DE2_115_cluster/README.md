@@ -31,7 +31,9 @@ Caveats
 -------
 
 * Hubs can be daisy chained, but overall the system may not scale too
-  well, because the serial port is rather slow.
+  well. The serial port can handle about 2880 results/s, corresponding
+  to about 12 Thash/s. But even at lower average speeds, there may be
+  bursts of results where some are lost due to congestion.
 
 * The number of miners should be a power of two. Otherwise, when the
   nonce overflows, it will start from a different initial value. Over
