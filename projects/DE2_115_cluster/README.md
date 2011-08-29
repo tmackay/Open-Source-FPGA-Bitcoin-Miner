@@ -12,7 +12,7 @@ Design
 
 * Each miner is basically like one of my serial miners, communicating
   through a serial port (possibly low voltage levels, instead of
-  RS232).
+  RS232). (You can even use the miner as such to test a hub.)
 
 * All miners work on the same data, with different nonce ranges. Two
   miners would start nonces at 0 and 1, and increment by 2.
@@ -74,12 +74,12 @@ Current implementation
 ----------------------
 
 This has been succesfully tested on a single DE2-115, with one hub and
-two miners. I do not have enough hardware for a proper cluster at the
-moment.
+two miners.
 
-This should work on Xilinx systems too, by changing the PLL code to a
-DCM, for example from my Verilog Xilinx miner. Feel free to mix
-vendors in a cluster, as long as signal levels match.
+This works on Xilinx systems too, by changing the PLL code to a
+DCM, see ../Xilinx_cluster for an implementation.
+
+Feel free to mix vendors in a cluster, as long as signal levels match.
 
 To build the code, download and unzip
 
@@ -89,10 +89,27 @@ Change the clock frequency in both async_* files to match the hash
 clock. Proceed building the project fpgaminer as usual.
 
 
-Test setups
------------
+Quick and dirty test setup
+--------------------------
 
 If you already have an FPGA with my serial miner, you can use it as a
 slave for testing the hub. There will overlap in the nonce ranges, but
 it saves the time of building new code, until the hub is verified to
 work.
+
+This setup has been verified to work with ../DE2_115_makomk_serial as
+the vanilla miner, and the hub code on a Xilinx board (Nexys2 500K)
+using the ../Xilinx_cluster project. The Nexys2 used real RS232 for
+the computer uplink, and general I/O pins for the slave connection.
+
+
+TODO
+----
+
+* A single slave miner. This should be a very light wrapper around
+  miner.v, to keep things modular. Vendor specific code (DCM/PLL)
+  would reside in this wrapper.
+
+* A better scheme for the different nonce ranges. Currently this needs
+  different bitfiles for each FPGA, with considerable synthesis-time
+  configuration.
