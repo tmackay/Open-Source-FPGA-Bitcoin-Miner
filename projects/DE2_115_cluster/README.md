@@ -57,7 +57,9 @@ Caveats
   problem for single-chip clusters, they could use any number.
 
 * Miners should probably run at roughly the same hashrate, to cover
-  the nonce space evenly.
+  the nonce space evenly. But if you have very differently sized
+  FPGAs, you could put several small miners on a big chip (with a hub)
+  to make a collection of similarly powered hashers.
 
 
 Use cases (besides clustering)
