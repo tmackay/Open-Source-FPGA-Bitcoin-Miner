@@ -19,7 +19,7 @@ module fpgaminer_top (osc_clk, RxD, TxD);
    // be a power of two. Otherwise the nonce ranges may overlap.
    parameter MINERS = 2;
 
-   parameter LOOP_LOG2 = 3;
+   parameter LOOP_LOG2 = 2;
 
    wire [MINERS-1:0] slave_rxd;
    
