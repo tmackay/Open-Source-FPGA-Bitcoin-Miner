@@ -27,14 +27,18 @@ module fpgaminer_top (osc_clk, RxD, TxD);
    // Miners on the same FPGA with this hub
    parameter LOCAL_MINERS = 2;
 
-   wire [LOCAL_MINERS-1:0] localminer_rxd;
-
+   // Make sure each miner has a distinct nonce start. Local miners'
+   // starts will range from this to LOCAL_NONCE_START + LOCAL_MINERS - 1.
+   parameter LOCAL_NONCE_START = 0;
+   
    // It is OK to make extra/unused ports, but TOTAL_MINERS must be
    // correct for the actual number of hashers.
    parameter EXT_PORTS = 0;
 
    localparam SLAVES = LOCAL_MINERS + EXT_PORTS;
-   
+
+   wire [LOCAL_MINERS-1:0] localminer_rxd;
+
    // Work distribution is simply copying to all miners, so no logic
    // needed there, simply copy the RxD.
    input 	     RxD;
@@ -85,7 +89,7 @@ module fpgaminer_top (osc_clk, RxD, TxD);
       genvar 	     i;
       for (i = 0; i < LOCAL_MINERS; i = i + 1)
 	begin: for_local_miners
-	   miner #(.nonce_stride(TOTAL_MINERS), .nonce_start(i), .LOOP_LOG2(LOOP_LOG2)) M (.hash_clk(hash_clk), .RxD(RxD), .TxD(localminer_rxd[i]));
+	   miner #(.nonce_stride(TOTAL_MINERS), .nonce_start(LOCAL_NONCE_START+i), .LOOP_LOG2(LOOP_LOG2)) M (.hash_clk(hash_clk), .RxD(RxD), .TxD(localminer_rxd[i]));
 
    	   slave_receive slrx (.clk(hash_clk), .RxD(localminer_rxd[i]), .nonce(slave_nonces[i*32+31:i*32]), .new_nonce(new_nonces[i]));
 	end

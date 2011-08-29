@@ -88,3 +88,11 @@ http://www.fpga4fun.com/files/async.zip
 Change the clock frequency in both async_* files to match the hash
 clock. Proceed building the project fpgaminer as usual.
 
+
+Test setups
+-----------
+
+If you already have an FPGA with my serial miner, you can use it as a
+slave for testing the hub. There will overlap in the nonce ranges, but
+it saves the time of building new code, until the hub is verified to
+work.
