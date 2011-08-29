@@ -39,10 +39,12 @@ Scaling
   remains to be seen.
 
 * A hub does not care how many miners there are. The mux/cache code is
-  only about the available ports. However, each miner must know the
-  total number, as it equals the nonce stride, and have a distinct
-  nonce start. This means building a new .sof/.bit for each node,
-  unless nonce_start could be set with a switch, for example.
+  only about the available ports.
+
+* However, each miner must know the total number, as it equals the
+  nonce stride. Each miner also needs a distinct nonce start. This
+  means building a new .sof/.bit for each node, unless nonce_start
+  could be set with a switch, for example.
 
 
 Caveats
