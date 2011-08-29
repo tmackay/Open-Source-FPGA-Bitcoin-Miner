@@ -112,4 +112,6 @@ TODO
 
 * A better scheme for the different nonce ranges. Currently this needs
   different bitfiles for each FPGA, with considerable synthesis-time
-  configuration.
+  configuration. For example, setting nonce_start and nonce_stride
+  with switches. This probably needs a reset button to re-initialize
+  the register.
