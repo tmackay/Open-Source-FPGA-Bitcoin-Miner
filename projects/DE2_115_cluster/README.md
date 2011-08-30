@@ -110,7 +110,7 @@ TODO
 
 * A single slave miner. This should be a very light wrapper around
   miner.v, to keep things modular. Vendor specific code (DCM/PLL)
-  would reside in this wrapper.
+  would reside in this wrapper. -> done for Xilinx
 
 * A more dynamic scheme for the different nonce ranges. Currently this
   needs different bitfiles for each FPGA, with considerable
