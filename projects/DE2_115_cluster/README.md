@@ -112,8 +112,15 @@ TODO
   miner.v, to keep things modular. Vendor specific code (DCM/PLL)
   would reside in this wrapper.
 
-* A better scheme for the different nonce ranges. Currently this needs
-  different bitfiles for each FPGA, with considerable synthesis-time
-  configuration. For example, setting nonce_start and nonce_stride
-  with switches. This probably needs a reset button to re-initialize
-  the register.
+* A more dynamic scheme for the different nonce ranges. Currently this
+  needs different bitfiles for each FPGA, with considerable
+  synthesis-time configuration. For example, setting nonce_start and
+  nonce_stride with switches would be nicer. This probably needs a
+  reset button to re-initialize the register.
+
+* The reset button should also clear the input data buffer, thus
+  helping restart a miner without reprogramming.
+
+* With the above improvements, my original serial miner would just be
+  a special case with nonce_start=0 and nonce_stride=1, thus unifying
+  the codebase.
