@@ -105,12 +105,13 @@ using the ../Xilinx_cluster project. The Nexys2 used real RS232 for
 the computer uplink, and general I/O pins for the slave connection.
 
 
-TODO
-----
+Feature requests
+----------------
 
 * A single slave miner. This should be a very light wrapper around
   miner.v, to keep things modular. Vendor specific code (DCM/PLL)
-  would reside in this wrapper. -> done for Xilinx
+  would reside in this wrapper. My original serial miner would then be
+  a special case of this, with nonce_stride=1. -> done for Xilinx.
 
 * A more dynamic scheme for the different nonce ranges. Currently this
   needs different bitfiles for each FPGA, with considerable
@@ -121,6 +122,15 @@ TODO
 * The reset button should also clear the input data buffer, thus
   helping restart a miner without reprogramming.
 
-* With the above improvements, my original serial miner would just be
-  a special case with nonce_start=0 and nonce_stride=1, thus unifying
-  the codebase.
+
+Bugs/issues
+-----------
+
+The hub logic is currently not parameterized, it is hardcoded with two
+ports. At the heart of it is an if-else construct; even if it could be
+generated from parameters, it would probably not scale to high
+clockspeeds and larger hubs.
+
+Some alternatives are explored in the fpgaminer_top_alt* files, but
+none currently work at the moment; they only return results from the
+first port. This may be a subtle bug with timing etc.
