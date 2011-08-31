@@ -5,15 +5,9 @@
 
 module fpgaminer_top (osc_clk, RxD, TxD);
 
-	//// PLL
-
    input osc_clk;
    wire hash_clk;
-	`ifndef SIM
-                main_pll pll_blk (osc_clk, hash_clk);
-	`else
-		assign hash_clk = osc_clk;
-	`endif
+   main_pll pll_blk (osc_clk, hash_clk);
 
    // This determines the nonce stride for all miners in the cluster,
    // not just this hub. For an actual cluster of separately clocked
@@ -62,6 +56,7 @@ module fpgaminer_top (osc_clk, RxD, TxD);
    // TODO: generate for any number of SLAVES
    always @(posedge hash_clk)
      begin
+	// Raise flags when new nonces appear
 	if (new_nonces[0]) new_nonces_flag[0] <= 1;
 	if (new_nonces[1]) new_nonces_flag[1] <= 1;
 		
