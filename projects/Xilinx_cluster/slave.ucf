@@ -3,9 +3,12 @@
 NET "osc_clk" LOC = "B8";
 
 # serial port receive & transmit
-#NET "RxD" LOC = "U6";
-#NET "TxD" LOC = "P9";
+NET "RxD" LOC = "U6";
+NET "TxD" LOC = "P9";
 
 # TTL level serial port: ja3 = rxd, ja2 = txd
-NET "TxD" LOC = "K12";
-NET "RxD" LOC = "L17";
+#NET "TxD" LOC = "K12";
+#NET "RxD" LOC = "L17";
+
+# Button 0
+NET "reset" LOC = "B18";

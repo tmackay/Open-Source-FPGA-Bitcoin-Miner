@@ -18,9 +18,10 @@
 `include "async_receiver.v"
 `include "async_transmitter.v"
 
-module slave (osc_clk, RxD, TxD);
+module slave (osc_clk, RxD, TxD, reset);
 
    input osc_clk;
+   wire hash_clk;
    
 //   main_pll pll_blk (.CLKIN_IN(osc_clk), .CLK0_OUT(hash_clk));
    main_pll pll_blk (.CLKIN_IN(osc_clk), .CLK2X_OUT(hash_clk));
@@ -29,17 +30,18 @@ module slave (osc_clk, RxD, TxD);
    // not just this hub. For an actual cluster of separately clocked
    // FPGAs, this should be a power of two. Otherwise the nonce ranges
    // may overlap.
-   parameter TOTAL_MINERS = 2;
+   parameter TOTAL_MINERS = 1;
 
    parameter LOOP_LOG2 = 5;
 
    // Make sure each miner has a distinct nonce start.
-   parameter LOCAL_NONCE_START = 1;
+   parameter LOCAL_NONCE_START = 0;
 
    input RxD;
    output TxD;
-
-   miner #(.nonce_stride(TOTAL_MINERS), .nonce_start(LOCAL_NONCE_START), .LOOP_LOG2(LOOP_LOG2)) M (.hash_clk(hash_clk), .RxD(RxD), .TxD(TxD));
+   input  reset;
+   
+   miner #(.nonce_stride(TOTAL_MINERS), .nonce_start(LOCAL_NONCE_START), .LOOP_LOG2(LOOP_LOG2)) M (.hash_clk(hash_clk), .RxD(RxD), .TxD(TxD), .serial_reset(reset));
     
 endmodule
 
