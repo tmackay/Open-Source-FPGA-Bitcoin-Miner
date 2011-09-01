@@ -1,6 +1,6 @@
 // by teknohog, replaces virtual_wire by rs232
 
-module serial_receive(clk, RxD, midstate, data2);
+module serial_receive(clk, RxD, midstate, data2, reset);
    input      clk;
    input      RxD;
    
@@ -19,6 +19,13 @@ module serial_receive(clk, RxD, midstate, data2);
    // test for these fails, should ask for new data, so it needs more
    // logic on the return side too. The check bits could be legible
    // 7seg for quick feedback :)
+
+   // The above is related to a more general issue of messing up the
+   // input buffers due to partial data. For example, when a serial
+   // cable is disconnected and reconnected. A manual reset is a much
+   // nicer remedy than complete reprogramming, and it has other uses
+   // in a cluster.
+   input 	  reset;
    
    reg [511:0] input_buffer;
    reg [511:0] input_copy;
@@ -31,22 +38,28 @@ module serial_receive(clk, RxD, midstate, data2);
    // complete input that is available.
    
    always @(posedge clk)
-     case (demux_state)
-       7'b1000000:
-	 begin
-	    input_copy <= input_buffer;
-	    demux_state <= 0;
-	 end
-       
-       default:
-	 if(RxD_data_ready)
-	   begin
-	      input_buffer <= input_buffer << 8;
-	      input_buffer[7:0] <= RxD_data;
-	      demux_state <= demux_state + 1;
-	   end
-     endcase // case (demux_state)
-   
+     begin
+	// There is no real need to clear data, what matters is
+	// resetting the state
+	if (reset) demux_state <= 0;
+     
+	case (demux_state)
+	  7'b1000000:
+	    begin
+	       input_copy <= input_buffer;
+	       demux_state <= 0;
+	    end
+	  
+	  default:
+	    if(RxD_data_ready)
+	      begin
+		 input_buffer <= input_buffer << 8;
+		 input_buffer[7:0] <= RxD_data;
+		 demux_state <= demux_state + 1;
+	      end
+	endcase // case (demux_state)
+     end
+	
 endmodule // serial_receive
 
 module serial_transmit (clk, TxD, busy, send, word);

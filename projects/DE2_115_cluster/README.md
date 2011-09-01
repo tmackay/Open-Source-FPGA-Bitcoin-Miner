@@ -120,7 +120,7 @@ Feature requests
   reset button to re-initialize the register.
 
 * The reset button should also clear the input data buffer, thus
-  helping restart a miner without reprogramming.
+  helping restart a miner without reprogramming. -> done.
 
 
 Bugs/issues

@@ -21,7 +21,7 @@
 
 `timescale 1ns/1ps
 
-module miner (hash_clk, RxD, TxD);
+module miner (hash_clk, RxD, TxD, serial_reset);
    parameter nonce_stride = 1;
    parameter nonce_start = 0;
    parameter LOOP_LOG2 = 5;
@@ -81,8 +81,9 @@ module miner (hash_clk, RxD, TxD);
 	wire [255:0] midstate_vw, data2_vw;
 
    input 	     RxD;
+   input 	     serial_reset;
    
-   serial_receive serrx (.clk(hash_clk), .RxD(RxD), .midstate(midstate_vw), .data2(data2_vw));
+   serial_receive serrx (.clk(hash_clk), .RxD(RxD), .midstate(midstate_vw), .data2(data2_vw), .reset(serial_reset));
    
 	//// Virtual Wire Output
 	reg [31:0] golden_nonce = 0;

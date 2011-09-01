@@ -15,13 +15,16 @@
 `include "async_receiver.v"
 `include "async_transmitter.v"
 
-module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd);
+module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd, reset);
 
    input osc_clk;
-   
 //   main_pll pll_blk (.CLKIN_IN(osc_clk), .CLK0_OUT(hash_clk));
    main_pll pll_blk (.CLKIN_IN(osc_clk), .CLK2X_OUT(hash_clk));
 
+   // Reset input buffers, both the workdata buffers in miners, and
+   // the nonce receivers in hubs
+   input  reset;
+   
    // This determines the nonce stride for all miners in the cluster,
    // not just this hub. For an actual cluster of separately clocked
    // FPGAs, this should be a power of two. Otherwise the nonce ranges
@@ -96,9 +99,9 @@ module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd);
       genvar 	     i;
       for (i = 0; i < LOCAL_MINERS; i = i + 1)
 	begin: for_local_miners
-	   miner #(.nonce_stride(TOTAL_MINERS), .nonce_start(LOCAL_NONCE_START+i), .LOOP_LOG2(LOOP_LOG2)) M (.hash_clk(hash_clk), .RxD(RxD), .TxD(localminer_rxd[i]));
+	   miner #(.nonce_stride(TOTAL_MINERS), .nonce_start(LOCAL_NONCE_START+i), .LOOP_LOG2(LOOP_LOG2)) M (.hash_clk(hash_clk), .RxD(RxD), .TxD(localminer_rxd[i]), .serial_reset(reset));
 
-   	   slave_receive slrx (.clk(hash_clk), .RxD(localminer_rxd[i]), .nonce(slave_nonces[i*32+31:i*32]), .new_nonce(new_nonces[i]));
+   	   slave_receive slrx (.clk(hash_clk), .RxD(localminer_rxd[i]), .nonce(slave_nonces[i*32+31:i*32]), .new_nonce(new_nonces[i]), .reset(reset));
 	end
    endgenerate
 
@@ -111,7 +114,7 @@ module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd);
       genvar 		  j;
       for (j = LOCAL_MINERS; j < SLAVES; j = j + 1)
 	begin: for_ports
-   	   slave_receive slrx (.clk(hash_clk), .RxD(extminer_rxd[j-LOCAL_MINERS]), .nonce(slave_nonces[j*32+31:j*32]), .new_nonce(new_nonces[j]));
+   	   slave_receive slrx (.clk(hash_clk), .RxD(extminer_rxd[j-LOCAL_MINERS]), .nonce(slave_nonces[j*32+31:j*32]), .new_nonce(new_nonces[j]), .reset(reset));
 	end
    endgenerate
     
