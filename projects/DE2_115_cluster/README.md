@@ -75,8 +75,10 @@ Use cases (besides clustering)
 Current implementation
 ----------------------
 
-This has been succesfully tested on a single DE2-115, with one hub and
-two miners.
+This has been succesfully tested on a DE2-115, with one hub and two
+miners on a single FPGA. The hub code is so small that it generally
+makes sense to integrate miners with it, which is how the current code
+is designed. (Although you can set LOCAL_MINERS=0.)
 
 This works on Xilinx systems too, by changing the PLL code to a
 DCM, see ../Xilinx_cluster for an implementation.
@@ -105,22 +107,26 @@ using the ../Xilinx_cluster project. The Nexys2 used real RS232 for
 the computer uplink, and general I/O pins for the slave connection.
 
 
-Feature requests
+Planned features
 ----------------
 
 * A single slave miner. This should be a very light wrapper around
-  miner.v, to keep things modular. Vendor specific code (DCM/PLL)
-  would reside in this wrapper. My original serial miner would then be
-  a special case of this, with nonce_stride=1. -> done for Xilinx.
+  miner.v, to keep things modular. Vendor/board specific code
+  (DCM/PLL, buttons etc.)  would reside in this wrapper. My original
+  serial miner would then be a special case of this, with
+  nonce_stride=1. -> done for Xilinx.
 
 * A more dynamic scheme for the different nonce ranges. Currently this
   needs different bitfiles for each FPGA, with considerable
   synthesis-time configuration. For example, setting nonce_start and
   nonce_stride with switches would be nicer. This probably needs a
-  reset button to re-initialize the register.
+  reset button to re-initialize the register. However, not all boards
+  have switches/buttons so the current way must be available.
 
 * The reset button should also clear the input data buffer, thus
-  helping restart a miner without reprogramming. -> done.
+  helping restart a miner without reprogramming. Useful if the serial
+  cables get disconnected and reconnected, messing up the buffers. ->
+  done.
 
 
 Bugs/issues
