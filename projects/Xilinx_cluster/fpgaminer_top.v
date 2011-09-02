@@ -26,10 +26,7 @@ module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd, reset);
    // the nonce receivers in hubs
    input  reset;
    
-   // This determines the nonce stride for all miners in the cluster,
-   // not just this hub. For an actual cluster of separately clocked
-   // FPGAs, this should be a power of two. Otherwise the nonce ranges
-   // may overlap.
+   // Nonce stride for all miners in the cluster, not just this hub.
    parameter TOTAL_MINERS = 2;
 
    // For local miners only

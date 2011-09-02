@@ -16,17 +16,14 @@ module fpgaminer_top (osc_clk, RxD, TxD, reset_button);
    wire   reset;
    assign reset = ~reset_button;
    
-   // This determines the nonce stride for all miners in the cluster,
-   // not just this hub. For an actual cluster of separately clocked
-   // FPGAs, this should be a power of two. Otherwise the nonce ranges
-   // may overlap.
-   parameter TOTAL_MINERS = 2;
+   // Nonce stride for all miners in the cluster, not just this hub.
+   parameter TOTAL_MINERS = 3;
 
    // For local miners only
    parameter LOOP_LOG2 = 3;
 
    // Miners on the same FPGA with this hub
-   parameter LOCAL_MINERS = 2;
+   parameter LOCAL_MINERS = 3;
 
    // Make sure each miner has a distinct nonce start. Local miners'
    // starts will range from this to LOCAL_NONCE_START + LOCAL_MINERS - 1.
