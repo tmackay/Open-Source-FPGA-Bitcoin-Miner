@@ -10,6 +10,7 @@
 `include "../../src/sha256_transform.v"
 `include "../DE2_115_cluster/serial.v"
 `include "../DE2_115_cluster/serial_hub.v"
+`include "../DE2_115_cluster/hub_core.v"
 `include "../DE2_115_cluster/miner.v"
 
 `include "async_receiver.v"
@@ -60,39 +61,12 @@ module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd, reset);
    wire [SLAVES-1:0] 	new_nonces;
 
    // Using the same transmission code as individual miners from serial.v
-   reg 			serial_send = 0;
+   wire 		serial_send;
    wire 		serial_busy;
-   reg [31:0] 		golden_nonce = 0;
+   wire [31:0] 		golden_nonce;
    serial_transmit sertx (.clk(hash_clk), .TxD(TxD), .send(serial_send), .busy(serial_busy), .word(golden_nonce));
 
-   // Remember all nonces, even when they come too close together, and
-   // send them whenever the uplink is ready
-   reg [SLAVES-1:0] 	new_nonces_flag = 0;
-   
-   // TODO: generate for any number of SLAVES
-   always @(posedge hash_clk)
-     begin
-	if (new_nonces[0]) new_nonces_flag[0] <= 1;
-	if (new_nonces[1]) new_nonces_flag[1] <= 1;
-		
-	// Send results one at a time, until all nonce flags are cleared.
-	if (!serial_busy && |new_nonces_flag)
-	  begin
-	     serial_send <= 1;
-
-	     if (new_nonces_flag[0])
-	       begin
-		  golden_nonce <= slave_nonces[31:0];
-		  new_nonces_flag[0] <= 0;
-	       end
-	     else //if (new_nonces_flag[1])
-	       begin
-		  golden_nonce <= slave_nonces[31+32:32];
-		  new_nonces_flag[1] <= 0;
-	       end
-	  end
-	else serial_send <= 0;
-     end
+   hub_core #(.SLAVES(SLAVES)) hc (.hash_clk(hash_clk), .new_nonces(new_nonces), .golden_nonce(golden_nonce), .serial_send(serial_send), .serial_busy(serial_busy), .slave_nonces(slave_nonces));
 
    // Local miners and their input ports
    generate

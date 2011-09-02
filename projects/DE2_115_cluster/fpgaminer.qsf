@@ -69,6 +69,7 @@ set_global_assignment -name VERILOG_FILE fpgaminer_top.v
 set_global_assignment -name VERILOG_FILE ../../src/main_pll.v
 set_global_assignment -name VERILOG_FILE serial.v
 set_global_assignment -name VERILOG_FILE serial_hub.v
+set_global_assignment -name VERILOG_FILE hub_core.v
 set_global_assignment -name VERILOG_FILE miner.v
 set_global_assignment -name VERILOG_FILE async_transmitter.v
 set_global_assignment -name VERILOG_FILE async_receiver.v

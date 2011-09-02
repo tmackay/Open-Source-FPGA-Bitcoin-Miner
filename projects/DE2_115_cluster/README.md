@@ -124,16 +124,3 @@ Planned features
 
 * Reset the nonce each time it overflows -> no need for the 2^n
   restriction for TOTAL_MINERS. -> done.
-
-
-Bugs/issues
------------
-
-The hub logic is currently not parameterized, it is hardcoded with two
-ports. At the heart of it is an if-else construct; even if it could be
-generated from parameters, it would probably not scale to high
-clockspeeds and larger hubs.
-
-Some alternatives are explored in the fpgaminer_top_alt* files, but
-none currently work at the moment; they only return results from the
-first port. This may be a subtle bug with timing etc.
