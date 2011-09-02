@@ -121,7 +121,7 @@ module miner (hash_clk, RxD, TxD, serial_reset);
    assign nonce_next =
 		reset ? nonce_start :
 		feedback_next ? nonce :
-		(nonce_plus < nonce_start) ? nonce_start : nonce_plus;
+		(nonce_plus < nonce) ? nonce_start : nonce_plus;
 
 	
 	always @ (posedge hash_clk)
