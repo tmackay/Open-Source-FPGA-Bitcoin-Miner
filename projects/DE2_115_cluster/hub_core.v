@@ -25,17 +25,13 @@ module hub_core (hash_clk, new_nonces, golden_nonce, serial_send, serial_busy, s
    reg [SLAVES*32-1:0] 	    slave_nonces_shifted;
    assign golden_nonce = slave_nonces_shifted[31:0];
 
-   // Keep track of both brand new and new-but-yet-unsent nonces
-   wire [SLAVES-1:0] 	    new_nonces_all;
-   assign new_nonces_all = new_nonces_flag | new_nonces;
-
    // When sending, mark nonces to be cleared during next clock cycle
    reg [SLAVES-1:0] 	    clear_nonces;
    
    always @(posedge hash_clk)
      begin
 	// Raise flags when new nonces appear; lower those that have
-	// been sent;
+	// been sent
 	new_nonces_flag <= (new_nonces_flag & ~clear_nonces) | new_nonces;
 
 	if (port_counter == SLAVES-1)
@@ -43,8 +39,8 @@ module hub_core (hash_clk, new_nonces, golden_nonce, serial_send, serial_busy, s
 	else
 	  port_counter <= port_counter + 1;
 	
-	// Send results one at a time, lower the respective flag
-	if (!serial_busy && new_nonces_all[port_counter])
+	// Send results one at a time, mark to be cleared
+	if (!serial_busy && new_nonces_flag[port_counter])
 	  begin
 	     slave_nonces_shifted <= slave_nonces >> port_counter*32;
 	     serial_send_reg <= 1;
