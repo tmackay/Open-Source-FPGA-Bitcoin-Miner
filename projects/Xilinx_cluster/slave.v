@@ -26,10 +26,7 @@ module slave (osc_clk, RxD, TxD, reset);
 //   main_pll pll_blk (.CLKIN_IN(osc_clk), .CLK0_OUT(hash_clk));
    main_pll pll_blk (.CLKIN_IN(osc_clk), .CLK2X_OUT(hash_clk));
 
-   // This determines the nonce stride for all miners in the cluster,
-   // not just this hub. For an actual cluster of separately clocked
-   // FPGAs, this should be a power of two. Otherwise the nonce ranges
-   // may overlap.
+   // Nonce stride for all miners in the cluster, not just this hub.
    parameter TOTAL_MINERS = 1;
 
    parameter LOOP_LOG2 = 5;
