@@ -112,9 +112,16 @@ module miner (hash_clk, RxD, TxD, serial_reset);
 	// on 1..LOOP-1, take feedback from current stage
 	// This reduces the throughput by a factor of (LOOP), but also reduces the design size by the same amount
 	assign feedback_next = (LOOP == 1) ? 1'b0 : (cnt_next != {(LOOP_LOG2){1'b0}});
-	assign nonce_next =
-		reset ? 32'd0 :
-		feedback_next ? nonce : (nonce + nonce_stride);
+
+   // Restart at nonce_start after overflow, thus lifting the 2^n
+   // restriction of TOTAL_MINERS
+   wire [31:0] 	    nonce_plus;
+   assign nonce_plus = nonce + nonce_stride;
+   
+   assign nonce_next =
+		reset ? nonce_start :
+		feedback_next ? nonce :
+		(nonce_plus < nonce_start) ? nonce_start : nonce_plus;
 
 	
 	always @ (posedge hash_clk)

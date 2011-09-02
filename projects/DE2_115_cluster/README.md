@@ -50,12 +50,6 @@ Scaling
 Caveats
 -------
 
-* The number of miners should be a power of two. Otherwise, when the
-  nonce overflows, it will start from a different initial value. Over
-  time, as different miners drift in frequency, and have different
-  start times, the nonce ranges start to overlap. So this is not a
-  problem for single-chip clusters, they could use any number.
-
 * Miners should probably run at roughly the same hashrate, to cover
   the nonce space evenly. But if you have very differently sized
   FPGAs, you could put several small miners on a big chip (with a hub)
@@ -127,6 +121,9 @@ Planned features
   helping restart a miner without reprogramming. Useful if the serial
   cables get disconnected and reconnected, messing up the buffers. ->
   done.
+
+* Reset the nonce each time it overflows -> no need for the 2^n
+  restriction for TOTAL_MINERS. -> done.
 
 
 Bugs/issues
