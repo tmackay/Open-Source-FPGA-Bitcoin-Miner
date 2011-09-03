@@ -108,19 +108,18 @@ Planned features
   miner.v, to keep things modular. Vendor/board specific code
   (DCM/PLL, buttons etc.)  would reside in this wrapper. My original
   serial miner would then be a special case of this, with
-  nonce_stride=1. -> done for Xilinx.
+  nonce_stride=1. -> done.
+
+* A reset button to clear the input data buffer, thus helping restart
+  a miner without reprogramming. Useful if the serial cables get
+  disconnected and reconnected, messing up the buffers. -> done.
+
+* Reset the nonce each time it overflows -> no need for the 2^n
+  restriction for TOTAL_MINERS. -> done.
 
 * A more dynamic scheme for the different nonce ranges. Currently this
   needs different bitfiles for each FPGA, with considerable
   synthesis-time configuration. For example, setting nonce_start and
-  nonce_stride with switches would be nicer. This probably needs a
-  reset button to re-initialize the register. However, not all boards
+  nonce_stride with switches would be nicer. The reset button would
+  then initialize the nonce value properly. However, not all boards
   have switches/buttons so the current way must be available.
-
-* The reset button should also clear the input data buffer, thus
-  helping restart a miner without reprogramming. Useful if the serial
-  cables get disconnected and reconnected, messing up the buffers. ->
-  done.
-
-* Reset the nonce each time it overflows -> no need for the 2^n
-  restriction for TOTAL_MINERS. -> done.

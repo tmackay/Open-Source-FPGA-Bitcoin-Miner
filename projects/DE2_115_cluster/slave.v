@@ -6,30 +6,16 @@
 
 // by teknohog
 
-// Xilinx DCM
-//`include "main_pll.v"
-`include "main_pll_2x.v"
-
-`include "../../src/sha-256-functions.v"
-`include "../../src/sha256_transform.v"
-`include "../DE2_115_cluster/serial.v"
-`include "../DE2_115_cluster/miner.v"
-
-`include "async_receiver.v"
-`include "async_transmitter.v"
-
 module slave (osc_clk, RxD, TxD, reset);
 
    input osc_clk;
    wire hash_clk;
-   
-//   main_pll pll_blk (.CLKIN_IN(osc_clk), .CLK0_OUT(hash_clk));
-   main_pll pll_blk (.CLKIN_IN(osc_clk), .CLK2X_OUT(hash_clk));
+   main_pll pll_blk (osc_clk, hash_clk);
 
    // Nonce stride for all miners in the cluster, not just this hub.
    parameter TOTAL_MINERS = 1;
 
-   parameter LOOP_LOG2 = 5;
+   parameter LOOP_LOG2 = 1;
 
    // Make sure each miner has a distinct nonce start.
    parameter LOCAL_NONCE_START = 0;
