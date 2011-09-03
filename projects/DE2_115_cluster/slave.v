@@ -6,7 +6,7 @@
 
 // by teknohog
 
-module slave (osc_clk, RxD, TxD, reset);
+module slave (osc_clk, RxD, TxD, reset_button);
 
    input osc_clk;
    wire hash_clk;
@@ -22,7 +22,13 @@ module slave (osc_clk, RxD, TxD, reset);
 
    input RxD;
    output TxD;
-   input  reset;
+
+   // Reset input buffers, both the workdata buffers in miners, and
+   // the nonce receivers in hubs. DE2-115 buttons have inverted
+   // logic.
+   input  reset_button;
+   wire   reset;
+   assign reset = ~reset_button;
    
    miner #(.nonce_stride(TOTAL_MINERS), .nonce_start(LOCAL_NONCE_START), .LOOP_LOG2(LOOP_LOG2)) M (.hash_clk(hash_clk), .RxD(RxD), .TxD(TxD), .serial_reset(reset));
     
