@@ -123,3 +123,17 @@ Planned features
   nonce_stride with switches would be nicer. The reset button would
   then initialize the nonce value properly. However, not all boards
   have switches/buttons so the current way must be available.
+
+* Connecting local miners without the serial overhead. This should be
+  quite straightforward, as the hub logic already operates at the
+  level of 32-bit nonces. For more than one miner, there would be
+  further savings in that everyone could read the same workdata
+  register. However, routing the 512-bit data might be problematic,
+  especially on Xilinx.
+
+* As an intermediate step towards non-RS232 local miners, only the
+  nonce return path could be streamlined. This makes a lot of sense
+  for 1hub1miner configurations, which need one piece of the serial
+  workdata code in any case. IMHO, these are the most typical/ideal
+  configurations for a balanced cluster, unless you have huge FPGAs
+  that can fit several fully unrolled miners.
