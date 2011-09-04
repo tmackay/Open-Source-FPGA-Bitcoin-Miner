@@ -16,7 +16,8 @@
 `include "async_receiver.v"
 `include "async_transmitter.v"
 
-module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd, reset);
+//module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd, reset);
+module fpgaminer_top (osc_clk, RxD, TxD, gpio_led2);
 
    input osc_clk;
 //   main_pll pll_blk (.CLKIN_IN(osc_clk), .CLK0_OUT(hash_clk));
@@ -24,24 +25,28 @@ module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd, reset);
 
    // Reset input buffers, both the workdata buffers in miners, and
    // the nonce receivers in hubs
-   input  reset;
+   //input  reset;
+
+   reg 	  reset = 0;
+   output gpio_led2;
+   assign gpio_led2 = ~RxD;
    
    // Nonce stride for all miners in the cluster, not just this hub.
-   parameter TOTAL_MINERS = 2;
+   parameter TOTAL_MINERS = 5;
 
    // For local miners only
    parameter LOOP_LOG2 = 5;
 
    // Miners on the same FPGA with this hub
-   parameter LOCAL_MINERS = 1;
+   parameter LOCAL_MINERS = 5;
 
    // Make sure each miner has a distinct nonce start. Local miners'
    // starts will range from this to LOCAL_NONCE_START + LOCAL_MINERS - 1.
-   parameter LOCAL_NONCE_START = 1;
+   parameter LOCAL_NONCE_START = 0;
    
    // It is OK to make extra/unused ports, but TOTAL_MINERS must be
    // correct for the actual number of hashers.
-   parameter EXT_PORTS = 1;
+   parameter EXT_PORTS = 0;
 
    localparam SLAVES = LOCAL_MINERS + EXT_PORTS;
 
@@ -65,18 +70,22 @@ module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd, reset);
 
    hub_core #(.SLAVES(SLAVES)) hc (.hash_clk(hash_clk), .new_nonces(new_nonces), .golden_nonce(golden_nonce), .serial_send(serial_send), .serial_busy(serial_busy), .slave_nonces(slave_nonces));
 
-   // Local miners and their input ports
+   // Common workdata input for local miners
+   wire [255:0] 	midstate, data2;
+   serial_receive serrx (.clk(hash_clk), .RxD(RxD), .midstate(midstate), .data2(data2), .reset(reset));
+
+   // Local miners now directly connected
    generate
       genvar 	     i;
       for (i = 0; i < LOCAL_MINERS; i = i + 1)
 	begin: for_local_miners
-	   miner #(.nonce_stride(TOTAL_MINERS), .nonce_start(LOCAL_NONCE_START+i), .LOOP_LOG2(LOOP_LOG2)) M (.hash_clk(hash_clk), .RxD(RxD), .TxD(localminer_rxd[i]), .serial_reset(reset));
-
-   	   slave_receive slrx (.clk(hash_clk), .RxD(localminer_rxd[i]), .nonce(slave_nonces[i*32+31:i*32]), .new_nonce(new_nonces[i]), .reset(reset));
+	   miner #(.nonce_stride(TOTAL_MINERS), .nonce_start(LOCAL_NONCE_START+i), .LOOP_LOG2(LOOP_LOG2)) M (.hash_clk(hash_clk), .midstate_vw(midstate), .data2_vw(data2), .nonce_out(slave_nonces[i*32+31:i*32]), .is_golden(new_nonces[i]));
 	end
    endgenerate
 
-   // External miner ports, results appended to the end of slave_nonces
+   // External miner ports, results appended to the same slave_nonces
+   // as local ones
+   /*
    output [EXT_PORTS-1:0] extminer_txd;
    assign extminer_txd = {EXT_PORTS{RxD}};
    input [EXT_PORTS-1:0]  extminer_rxd;
@@ -88,6 +97,7 @@ module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd, reset);
    	   slave_receive slrx (.clk(hash_clk), .RxD(extminer_rxd[j-LOCAL_MINERS]), .nonce(slave_nonces[j*32+31:j*32]), .new_nonce(new_nonces[j]), .reset(reset));
 	end
    endgenerate
+    */
     
 endmodule
 

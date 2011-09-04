@@ -1,5 +1,4 @@
-// Hub code for a cluster of miners using async links, on the same
-// FPGA for now
+// Hub code for a cluster of miners using async links
 
 // by teknohog
 
@@ -55,18 +54,21 @@ module fpgaminer_top (osc_clk, RxD, TxD, reset_button);
 
    hub_core #(.SLAVES(SLAVES)) hc (.hash_clk(hash_clk), .new_nonces(new_nonces), .golden_nonce(golden_nonce), .serial_send(serial_send), .serial_busy(serial_busy), .slave_nonces(slave_nonces));
 
-   // Local miners and their input ports
+   // Common workdata input for local miners
+   wire [255:0] 	midstate, data2;
+   serial_receive serrx (.clk(hash_clk), .RxD(RxD), .midstate(midstate), .data2(data2), .reset(reset));
+
+   // Local miners now directly connected
    generate
       genvar 	     i;
       for (i = 0; i < LOCAL_MINERS; i = i + 1)
 	begin: for_local_miners
-	   miner #(.nonce_stride(TOTAL_MINERS), .nonce_start(LOCAL_NONCE_START+i), .LOOP_LOG2(LOOP_LOG2)) M (.hash_clk(hash_clk), .RxD(RxD), .TxD(localminer_rxd[i]), .serial_reset(reset));
-
-   	   slave_receive slrx (.clk(hash_clk), .RxD(localminer_rxd[i]), .nonce(slave_nonces[i*32+31:i*32]), .new_nonce(new_nonces[i]), .reset(reset));
+	   miner #(.nonce_stride(TOTAL_MINERS), .nonce_start(LOCAL_NONCE_START+i), .LOOP_LOG2(LOOP_LOG2)) M (.hash_clk(hash_clk), .midstate_vw(midstate), .data2_vw(data2), .nonce_out(slave_nonces[i*32+31:i*32]), .is_golden(new_nonces[i]));
 	end
    endgenerate
 
-   // External miner ports, results appended to the end of slave_nonces
+   // External miner ports, results appended to the same slave_nonces
+   // as local ones
    /*
    output [EXT_PORTS-1:0] extminer_txd;
    assign extminer_txd = {EXT_PORTS{RxD}};

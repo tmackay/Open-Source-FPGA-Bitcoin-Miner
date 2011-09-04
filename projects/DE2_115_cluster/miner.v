@@ -21,7 +21,7 @@
 
 `timescale 1ns/1ps
 
-module miner (hash_clk, RxD, TxD, serial_reset);
+module miner (hash_clk, midstate_vw, data2_vw, nonce_out, is_golden);
    parameter nonce_stride = 1;
    parameter nonce_start = 0;
    parameter LOOP_LOG2 = 5;
@@ -78,24 +78,17 @@ module miner (hash_clk, RxD, TxD, serial_reset);
 
 	//// Virtual Wire Control
 	reg [255:0] midstate_buf = 0, data_buf = 0;
-	wire [255:0] midstate_vw, data2_vw;
-
-   input 	     RxD;
-   input 	     serial_reset;
-   
-   serial_receive serrx (.clk(hash_clk), .RxD(RxD), .midstate(midstate_vw), .data2(data2_vw), .reset(serial_reset));
+	input [255:0] midstate_vw, data2_vw;
    
 	//// Virtual Wire Output
 	reg [31:0] golden_nonce = 0;
-   reg 		   serial_send;
-   wire 	   serial_busy;
-   output 	   TxD;
-
-   serial_transmit sertx (.clk(hash_clk), .TxD(TxD), .send(serial_send), .busy(serial_busy), .word(golden_nonce));
+   output [31:0] 	   nonce_out;
+   assign nonce_out = golden_nonce;
    
-
 	//// Control Unit
 	reg is_golden_ticket = 1'b0;
+   output   is_golden;
+   assign is_golden = is_golden_ticket;
 	reg feedback_d1 = 1'b1;
 	wire [5:0] cnt_next;
 	wire [31:0] nonce_next;
@@ -157,11 +150,7 @@ module miner (hash_clk, RxD, TxD, serial_reset);
 			  golden_nonce <= nonce - (32'd66 * nonce_stride);
 			else
 				golden_nonce <= nonce - GOLDEN_NONCE_OFFSET;
-
-		   if (!serial_busy) serial_send <= 1;
 		end // if (is_golden_ticket)
-		else
-		  serial_send <= 0;
 	   
 `ifdef SIM
 		if (!feedback_d1)
