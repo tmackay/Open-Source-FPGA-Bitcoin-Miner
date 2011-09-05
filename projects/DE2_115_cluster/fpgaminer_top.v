@@ -16,21 +16,41 @@ module fpgaminer_top (osc_clk, RxD, TxD, reset_button);
    assign reset = ~reset_button;
    
    // Nonce stride for all miners in the cluster, not just this hub.
-   parameter TOTAL_MINERS = 3;
+`ifdef TOTAL_MINERS
+   parameter TOTAL_MINERS = `TOTAL_MINERS;
+`else
+   parameter TOTAL_MINERS = 5;
+`endif
 
-   // For local miners only
-   parameter LOOP_LOG2 = 3;
+   // For local miners
+`ifdef LOOP_LOG2
+   parameter LOOP_LOG2 = `LOOP_LOG2;
+`else
+   parameter LOOP_LOG2 = 5;
+`endif
 
    // Miners on the same FPGA with this hub
-   parameter LOCAL_MINERS = 3;
+`ifdef LOCAL_MINERS
+   parameter LOCAL_MINERS = `LOCAL_MINERS;
+`else
+   parameter LOCAL_MINERS = 1;
+`endif
 
    // Make sure each miner has a distinct nonce start. Local miners'
    // starts will range from this to LOCAL_NONCE_START + LOCAL_MINERS - 1.
+`ifdef LOCAL_NONCE_START
+   parameter LOCAL_NONCE_START = `LOCAL_NONCE_START;
+`else
    parameter LOCAL_NONCE_START = 0;
+`endif
    
    // It is OK to make extra/unused ports, but TOTAL_MINERS must be
    // correct for the actual number of hashers.
+`ifdef EXT_PORTS
+   parameter EXT_PORTS = `EXT_PORTS;
+`else
    parameter EXT_PORTS = 0;
+`endif
 
    localparam SLAVES = LOCAL_MINERS + EXT_PORTS;
 
@@ -67,13 +87,13 @@ module fpgaminer_top (osc_clk, RxD, TxD, reset_button);
 	end
    endgenerate
 
-   // External miner ports, results appended to the same slave_nonces
-   // as local ones
+   // External miner ports, results appended to the same
+   // slave_nonces/new_nonces as local ones
    /*
    output [EXT_PORTS-1:0] extminer_txd;
-   assign extminer_txd = {EXT_PORTS{RxD}};
    input [EXT_PORTS-1:0]  extminer_rxd;
-   
+   assign extminer_txd = {EXT_PORTS{RxD}};
+      
    generate
       genvar 		  j;
       for (j = LOCAL_MINERS; j < SLAVES; j = j + 1)
