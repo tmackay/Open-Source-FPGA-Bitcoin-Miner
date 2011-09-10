@@ -4,8 +4,8 @@
 
 # Python wrapper for Xilinx Serial Miner
 
-user = "teknohog.spartan"
-password = "nexys2"
+user = "teknohog.cluster"
+password = "xilinx"
 host = "api2.bitcoin.cz"
 http_port = "8332"
 
@@ -117,7 +117,9 @@ class Submitter(Thread):
         print("Block found on " + ctime())
 
         # debug, compare to the 7-segment display
-        print(self.nonce.encode('hex'))
+        n = self.nonce.encode('hex')
+        stride = 6
+        print(n + " % " + str(stride) + " = " + str(int(n, 16) % stride))
 
         hrnonce = self.nonce[::-1].encode('hex')
 

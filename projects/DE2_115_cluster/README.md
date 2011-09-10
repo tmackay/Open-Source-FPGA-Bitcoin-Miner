@@ -62,18 +62,19 @@ Use cases besides clustering
   could then fit 3 half-miners to fully utilize the silicon.
 
 
-Current implementation
-----------------------
+Current implementations
+-----------------------
 
-The code is mostly being tested on a DE2-115, with two or more local
-miners configured with the hub, and no external ports.
+* The code is mostly being tested on a DE2-115, with two or more local
+  miners configured with the hub, and no external ports.
 
-This works on Xilinx systems too, by changing the PLL code to a DCM,
-see ../Xilinx_cluster for an implementation. Tested on a Nexys2 board
-with a single miner.
+* ../Xilinx_cluster tested on a Nexys2 board with a single miner.
 
-Feel free to mix vendors in a cluster, as long as signal levels
-match. A quick and dirty setup (below) has shown this to work.
+* Nexys2 with an external port and 1 miner + DE2-115 with 4 miners,
+  connected via TTL level serial.
+
+* Nexys2 with an external port and 1 miner + a Spartan 3E 1600K board
+  with 5 miners, connected via TTL level serial.
 
 To build the code, download and unzip
 
@@ -81,6 +82,11 @@ http://www.fpga4fun.com/files/async.zip
 
 Change the clock frequency in both async_* files to match the hash
 clock. Proceed building the project fpgaminer as usual.
+
+miner.py now includes a debugging aid for clusters. It shows the nonce
+mod stride, giving the index (nonce_start) of the miner in
+question. You need to edit the line with stride = for the correct
+total_miners.
 
 
 Quick and dirty test setup
@@ -130,4 +136,3 @@ Planned features
   unnecessary. The slight overhead of a single-port hub is actually a
   welcome improvement, as it will cache a result if they come too
   close together for sending. -> done.
-
