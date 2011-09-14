@@ -84,10 +84,11 @@ http://www.fpga4fun.com/files/async.zip
 Change the clock frequency in both async_* files to match the hash
 clock. Proceed building the project fpgaminer as usual.
 
-miner.py now includes a debugging aid for clusters. It shows the nonce
-mod stride, giving the index (nonce_start) of the miner in
-question. You need to edit the line with stride = for the correct
-total_miners.
+miner.py now includes a debugging aid for clusters. For a cluster of 6
+total_miners, use miner.py -m 6, and it will show the nonce_start of
+each result, thus identifying the node. Other mining options are now
+commandline parameters with sensible defaults; the URL defaults to my
+account, in case you want to donate some shares :)
 
 
 Quick and dirty test setup
