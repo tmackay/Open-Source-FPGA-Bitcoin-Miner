@@ -96,8 +96,9 @@ Makefile for other FPGAs, see https://www.boldport.com/.
 http://ixo-jtag.sourceforge.net/nexys2-linux-howto.html
  
 
-3. Edit your details such as username and serial port in miner.py, and
-start mining. It requires a few non-standard libraries, pyserial and
+3. Run miner.py with your pool/server URL and possibly other
+options. (The URL defaults to my account, in case you want to donate
+some shares :) It requires a few non-standard libraries, pyserial and
 json-rpc.
 
 http://pyserial.sourceforge.net/

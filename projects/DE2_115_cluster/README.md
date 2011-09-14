@@ -21,7 +21,8 @@ Design
   returning to miner.py. If miners return work very close to each
   other, the hub will cache results and send one at a time.
  
-* miner.py is exactly the same as for a single miner.
+* miner.py is exactly the same as for a single miner, from
+  ../Verilog_Xilinx_Port
 
 * Every FPGA in the cluster now includes a hub. For leaf nodes it acts
   as a serial send buffer. Other nodes are configured with external
@@ -70,11 +71,11 @@ Current implementations
 
 * ../Xilinx_cluster tested on a Nexys2 board with a single miner.
 
-* Nexys2 with an external port and 1 miner + DE2-115 with 4 miners,
-  connected via TTL level serial.
+* Nexys2 500K with an external port and 1 miner + DE2-115 with 4
+  miners, connected via TTL level serial.
 
-* Nexys2 with an external port and 1 miner + a Spartan 3E 1600K board
-  with 5 miners, connected via TTL level serial.
+* Nexys2 500K with external ports and 1 miner + a couple of Spartan 3E
+  1600K boards with 5 miners each
 
 To build the code, download and unzip
 

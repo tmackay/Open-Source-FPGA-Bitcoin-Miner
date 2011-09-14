@@ -2,24 +2,14 @@
 
 # by teknohog
 
-# Python wrapper for Xilinx Serial Miner
-
-user = "teknohog.spartan"
-password = "nexys2"
-host = "api2.bitcoin.cz"
-http_port = "8332"
-
-serial_port = "/dev/ttyS0"
-
-askrate = 5
-
-###############################################################################
+# Python wrapper for my serial port Bitcoin FPGA miners
 
 from jsonrpc import ServiceProxy
 from time import ctime, sleep, time
 from serial import Serial
 from threading import Thread, Event
 from Queue import Queue
+from optparse import OptionParser
 
 def stats(count, starttime):
     # 2**32 hashes per share (difficulty 1)
@@ -98,7 +88,7 @@ class Writer(Thread):
             
             ser.write(payload)
             
-            result = golden.wait(askrate)
+            result = golden.wait(options.askrate)
 
             if result:
                 golden.clear()
@@ -115,6 +105,13 @@ class Submitter(Thread):
         # come in sooner than the submits finish.
 
         print("Block found on " + ctime())
+
+        if options.mod != 0:
+            n = self.nonce.encode('hex')
+            stride = int(options.mod)
+            print(n + " % " + str(stride) + " = " + str(int(n, 16) % stride))
+        elif options.debug:
+            print(self.nonce.encode('hex'))
 
         hrnonce = self.nonce[::-1].encode('hex')
 
@@ -153,15 +150,27 @@ class Display_stats(Thread):
                 
             results_queue.task_done()
 
+parser = OptionParser()
+
+parser.add_option("-a", "--askrate", dest="askrate", default=5, help="Seconds between getwork requests")
+
+parser.add_option("-d", "--debug", dest="debug", default=False, action="store_true", help="Show each nonce result in hex")
+
+parser.add_option("-m", "--mod", dest="mod", default=0, help="Show the nonce result remainder, to identify the node in a cluster")
+
+parser.add_option("-u", "--url", dest="url", default="http://teknohog.cluster:xilinx@api2.bitcoin.cz:8332/", help="URL for bitcoind or mining pool, typically http://user:password@host:8332/")
+
+parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyS0", help="Serial port, e.g. /dev/ttyS0 on unix or COM1 in Windows")
+
+(options, args) = parser.parse_args()
+
 golden = Event()
 
-url = 'http://' + user + ':' + password + '@' + host + ':' + http_port
-
-bitcoin = ServiceProxy(url)
+bitcoin = ServiceProxy(options.url)
 
 results_queue = Queue()
 
-ser = Serial(serial_port, 115200, timeout=askrate)
+ser = Serial(options.serial_port, 115200, timeout=options.askrate)
 
 reader = Reader()
 writer = Writer()

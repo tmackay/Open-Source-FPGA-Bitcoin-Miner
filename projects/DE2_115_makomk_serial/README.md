@@ -28,8 +28,7 @@ there,
 or try the more experimental way with program.sh in Linux, using
 UrJTAG and the .svf file.
 
-Edit your username etc. in miner.py before running it, unless you want
-to donate some extra shares :)
+Run miner.py from ../Verilog_Xilinx_Port.
 
 
 Custom build:
