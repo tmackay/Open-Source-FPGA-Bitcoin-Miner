@@ -69,13 +69,16 @@ Current implementations
 * The code is mostly being tested on a DE2-115, with two or more local
   miners configured with the hub, and no external ports.
 
-* ../Xilinx_cluster tested on a Nexys2 board with a single miner.
+* ../Xilinx_cluster tested on a Nexys2 500K board with a single miner.
 
 * Nexys2 500K with an external port and 1 miner + DE2-115 with 4
   miners, connected via TTL level serial.
 
 * Nexys2 500K with external ports and 1 miner + a couple of Spartan 3E
   1600K boards with 5 miners each
+
+* Four Spartan3E 1600K boards in a daisy chain, each having one slave
+  port and 5 miners.
 
 To build the code, download and unzip
 

@@ -2,15 +2,17 @@ Changes to the makomk branch by teknohog:
 
 * serial communications -> can run without Altera software
 
-The FPGA can also be programmed using alternative software, probably
-even in non-x86 systems. The associated program.sh uses UrJTAG, and it
-is noticeably slower than quartus_pgm, but works on many more systems.
+The FPGA can also be programmed using alternative software, which is
+not limited to x86. The associated program.sh uses UrJTAG, and it is
+noticeably slower than quartus_pgm, but works on many more
+systems. This way I have succesfully mined on both ARM and PPC32, so
+even big endian machines work.
 
 * display the golden nonce in hex on the 8x7-seg display
 
 These bright LEDs can be annoying in the long run, so this is enabled
-by the leftmost slide switch (SW17). For debugging, miner.py shows the golden
-nonce in hex as well.
+by the leftmost slide switch (SW17). For debugging, miner.py shows the
+golden nonce in hex as well, if you use the -d switch.
 
 
 Quick start:
