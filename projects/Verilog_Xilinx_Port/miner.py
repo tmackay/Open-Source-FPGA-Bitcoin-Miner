@@ -2,7 +2,7 @@
 
 # by teknohog
 
-# Python wrapper for my serial port Bitcoin FPGA miners
+# Python wrapper for my serial port FPGA Bitcoin miners
 
 from jsonrpc import ServiceProxy
 from time import ctime, sleep, time
@@ -106,9 +106,8 @@ class Submitter(Thread):
 
         print("Block found on " + ctime())
 
-        if options.mod != 0:
+        if stride > 0:
             n = self.nonce.encode('hex')
-            stride = int(options.mod)
             print(n + " % " + str(stride) + " = " + str(int(n, 16) % stride))
         elif options.debug:
             print(self.nonce.encode('hex'))
@@ -156,13 +155,15 @@ parser.add_option("-a", "--askrate", dest="askrate", default=5, help="Seconds be
 
 parser.add_option("-d", "--debug", dest="debug", default=False, action="store_true", help="Show each nonce result in hex")
 
-parser.add_option("-m", "--mod", dest="mod", default=0, help="Show the nonce result remainder, to identify the node in a cluster")
+parser.add_option("-m", "--miners", dest="miners", default=0, help="Show the nonce result remainder mod MINERS, to identify the node in a cluster")
 
 parser.add_option("-u", "--url", dest="url", default="http://teknohog.cluster:xilinx@api2.bitcoin.cz:8332/", help="URL for bitcoind or mining pool, typically http://user:password@host:8332/")
 
 parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyS0", help="Serial port, e.g. /dev/ttyS0 on unix or COM1 in Windows")
 
 (options, args) = parser.parse_args()
+
+stride = int(options.miners)
 
 golden = Event()
 
