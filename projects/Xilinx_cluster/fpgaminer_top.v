@@ -5,6 +5,7 @@
 // Xilinx DCM
 //`include "main_pll.v"
 `include "main_pll_2x.v"
+`include "dcm_2thirds_internal.v"
 
 `include "../../src/sha-256-functions.v"
 `include "../../src/sha256_transform.v"
@@ -16,21 +17,23 @@
 `include "async_receiver.v"
 `include "async_transmitter.v"
 
-//module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd, reset);
-//module fpgaminer_top (osc_clk, RxD, TxD, gpio_led2);
-module fpgaminer_top (osc_clk, RxD, TxD, reset);
+module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd);
+//module fpgaminer_top (osc_clk, RxD, TxD, rgb_led, extminer_rxd, extminer_txd);
+//module fpgaminer_top (osc_clk, RxD, TxD, rgb_led);
 
    input osc_clk;
 //   main_pll pll_blk (.CLKIN_IN(osc_clk), .CLK0_OUT(hash_clk));
-   main_pll pll_blk (.CLKIN_IN(osc_clk), .CLK2X_OUT(hash_clk));
+//   main_pll pll_blk (.CLKIN_IN(osc_clk), .CLK2X_OUT(hash_clk));
 
+   // clk * 2 / 1.5 = 4/3 * clk
+   wire clk_2x;
+   main_pll pll_blk (.CLKIN_IN(osc_clk), .CLK2X_OUT(clk_2x));
+   dcm_2thirds_internal dcm23 (.CLKIN_IN(clk_2x), .CLKDV_OUT(hash_clk));
+   
    // Reset input buffers, both the workdata buffers in miners, and
    // the nonce receivers in hubs
-   input  reset;
-
-   //reg 	  reset = 0;
-   //output gpio_led2;
-   //assign gpio_led2 = ~RxD;
+   //input  reset;
+   reg 	  reset = 0;
    
    // Nonce stride for all miners in the cluster, not just this hub.
 `ifdef TOTAL_MINERS
@@ -50,7 +53,7 @@ module fpgaminer_top (osc_clk, RxD, TxD, reset);
 `ifdef LOCAL_MINERS
    parameter LOCAL_MINERS = `LOCAL_MINERS;
 `else
-   parameter LOCAL_MINERS = 1;
+   parameter LOCAL_MINERS = 5;
 `endif
 
    // Make sure each miner has a distinct nonce start. Local miners'
@@ -66,7 +69,7 @@ module fpgaminer_top (osc_clk, RxD, TxD, reset);
 `ifdef EXT_PORTS
    parameter EXT_PORTS = `EXT_PORTS;
 `else
-   parameter EXT_PORTS = 0;
+   parameter EXT_PORTS = 6;
 `endif
 
    localparam SLAVES = LOCAL_MINERS + EXT_PORTS;
@@ -106,7 +109,6 @@ module fpgaminer_top (osc_clk, RxD, TxD, reset);
 
    // External miner ports, results appended to the same
    // slave_nonces/new_nonces as local ones
-   /*
    output [EXT_PORTS-1:0] extminer_txd;
    input [EXT_PORTS-1:0]  extminer_rxd;
    assign extminer_txd = {EXT_PORTS{RxD}};
@@ -118,7 +120,11 @@ module fpgaminer_top (osc_clk, RxD, TxD, reset);
    	   slave_receive slrx (.clk(hash_clk), .RxD(extminer_rxd[j-LOCAL_MINERS]), .nonce(slave_nonces[j*32+31:j*32]), .new_nonce(new_nonces[j]), .reset(reset));
 	end
    endgenerate
-    */
+    
+   //output [2:0] rgb_led;
+   //assign rgb_led[0] = |golden_nonce;
+   //assign rgb_led[1] = ~RxD;
+   //assign rgb_led[2] = ~TxD;
     
 endmodule
 
