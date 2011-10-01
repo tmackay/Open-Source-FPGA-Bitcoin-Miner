@@ -14,12 +14,14 @@
 `include "../DE2_115_cluster/hub_core.v"
 `include "../DE2_115_cluster/miner.v"
 
+`include "../DE2_115_cluster/pwm_fade.v"
+
 `include "async_receiver.v"
 `include "async_transmitter.v"
 
-module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd);
-//module fpgaminer_top (osc_clk, RxD, TxD, rgb_led, extminer_rxd, extminer_txd);
-//module fpgaminer_top (osc_clk, RxD, TxD, rgb_led);
+//module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd);
+module fpgaminer_top (osc_clk, RxD, TxD, led, extminer_rxd, extminer_txd);
+//module fpgaminer_top (osc_clk, RxD, TxD, led);
 
    input osc_clk;
 //   main_pll pll_blk (.CLKIN_IN(osc_clk), .CLK0_OUT(hash_clk));
@@ -69,7 +71,7 @@ module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd);
 `ifdef EXT_PORTS
    parameter EXT_PORTS = `EXT_PORTS;
 `else
-   parameter EXT_PORTS = 6;
+   parameter EXT_PORTS = 0;
 `endif
 
    localparam SLAVES = LOCAL_MINERS + EXT_PORTS;
@@ -120,11 +122,14 @@ module fpgaminer_top (osc_clk, RxD, TxD, extminer_rxd, extminer_txd);
    	   slave_receive slrx (.clk(hash_clk), .RxD(extminer_rxd[j-LOCAL_MINERS]), .nonce(slave_nonces[j*32+31:j*32]), .new_nonce(new_nonces[j]), .reset(reset));
 	end
    endgenerate
-    
-   //output [2:0] rgb_led;
-   //assign rgb_led[0] = |golden_nonce;
-   //assign rgb_led[1] = ~RxD;
-   //assign rgb_led[2] = ~TxD;
-    
+
+   output [2:0] led;
+   //assign led[0] = |golden_nonce;
+   assign led[1] = ~RxD;
+   assign led[2] = ~TxD;
+
+   // Light up only from locally found nonces, not ext_port results
+   pwm_fade #(.LOCAL_MINERS(LOCAL_MINERS), .LOOP_LOG2(LOOP_LOG2)) pf (.clk(hash_clk), .trigger(|new_nonces[LOCAL_MINERS-1:0]), .drive(led[0]));
+   
 endmodule
 
