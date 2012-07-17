@@ -34,6 +34,39 @@ def stats(count, starttime):
 
     return "[%i accepted, %i failed, %.2f +/- %.2f Mhash/s]" % (count[0], count[1], rate, stddev)
 
+class Net_manager(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+
+        self.daemon = True
+        self.urlindex = 0
+        
+    def run(self):
+        # Penalties are added by writer/submitter threads as they fail
+        # to connect. This loop processes penalty data, to decide
+        # which URL to use.
+
+        # This timeout, as well as the fading rate, are somewhat
+        # arbitrary and could probably be improved.
+        timeout = 10 * options.askrate
+
+        while True:
+            # Fade the old penalties away; now linear, but could be
+            # something like exponential in the future. Fading just
+            # before the calculation ensures that we tolerate one odd
+            # failure per the above factor of 10.
+            for p in penalties:
+                if not p.empty():
+                    p.get()
+                    p.task_done()
+
+            # Choose the first url from those with the least penalties
+            pensizes = [x.qsize() for x in penalties]
+            self.urlindex = pensizes.index(min(pensizes))
+
+            #print(pensizes, self.urlindex)
+            sleep(timeout)
+
 class Reader(Thread):
     def __init__(self):
         Thread.__init__(self)
@@ -73,11 +106,14 @@ class Writer(Thread):
     def run(self):
         while True:
             try:
-                work = bitcoin.getwork()
+                # cache this index, as it may change while waiting
+                i = netman.urlindex
+                work = proxies[i].getwork()
                 self.block = work['data']
                 self.midstate = work['midstate']
             except:
                 print("RPC getwork error")
+                penalties[i].put(0)
                 # In this case, keep crunching with the old data. It will get 
                 # stale at some point, but it's better than doing nothing.
 
@@ -121,10 +157,13 @@ class Submitter(Thread):
         data = self.block[:152] + hrnonce + self.block[160:]
 
         try:
-            result = bitcoin.getwork(data)
+            # cache this index, as it may change while waiting
+            i = netman.urlindex
+            result = proxies[i].getwork(data)
             print("Upstream result: " + str(result))
         except:
             print("RPC send error")
+            penalties[i].put(0)
             # a sensible boolean for stats
             result = False
 
@@ -161,7 +200,10 @@ parser.add_option("-d", "--debug", dest="debug", default=False, action="store_tr
 
 parser.add_option("-m", "--miners", dest="miners", default=0, help="Show the nonce result remainder mod MINERS, to identify the node in a cluster")
 
-parser.add_option("-u", "--url", dest="url", default="http://teknohog.cluster:xilinx@api2.bitcoin.cz:8332/", help="URL for bitcoind or mining pool, typically http://user:password@host:8332/")
+# Multiple urls as a list
+# The default must be set separately, lest it stays first in the list.
+# default=[] helps when testing list length
+parser.add_option("-u", "--url", dest="url", action="append", default=[], help="URLs for bitcoind or mining pool, typically http://user:password@host:8332/. For multiple backup URLs, use -u URL1 -u URL2 etc.")
 
 parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyS0", help="Serial port, e.g. /dev/ttyS0 on unix or COM1 in Windows")
 
@@ -171,16 +213,22 @@ stride = int(options.miners)
 
 golden = Event()
 
-bitcoin = ServiceProxy(options.url)
+if len(options.url) == 0:
+    options.url = ["http://teknohog.cluster:xilinx@api2.bitcoin.cz:8332/"]
+
+penalties = [Queue() for u in options.url]
+proxies = [ServiceProxy(u) for u in options.url]
 
 results_queue = Queue()
 
 ser = Serial(options.serial_port, 115200, timeout=options.askrate)
 
+netman = Net_manager()
 reader = Reader()
 writer = Writer()
 disp = Display_stats()
 
+netman.start()
 reader.start()
 writer.start()
 disp.start()
