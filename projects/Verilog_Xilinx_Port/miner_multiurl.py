@@ -64,7 +64,9 @@ class Net_manager(Thread):
             pensizes = [x.qsize() for x in penalties]
             self.urlindex = pensizes.index(min(pensizes))
 
-            print(pensizes, self.urlindex)
+            if options.debug:
+                print("Penalties: " + str(pensizes) + ", using " + str(self.urlindex))
+
             sleep(timeout)
 
 class Reader(Thread):
