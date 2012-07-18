@@ -48,7 +48,7 @@ class Net_manager(Thread):
 
         # This timeout, as well as the fading rate, are somewhat
         # arbitrary and could probably be improved.
-        timeout = 10 * options.askrate
+        timeout = 10 * askrate
 
         while True:
             # Fade the old penalties away; now linear, but could be
@@ -132,7 +132,7 @@ class Writer(Thread):
             
             ser.write(payload)
             
-            result = golden.wait(options.askrate)
+            result = golden.wait(askrate)
 
             if result:
                 golden.clear()
@@ -217,6 +217,7 @@ parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyS0", he
 (options, args) = parser.parse_args()
 
 stride = int(options.miners)
+askrate = int(options.askrate)
 
 golden = Event()
 
@@ -229,7 +230,7 @@ proxies = [ServiceProxy(u) for u in options.url]
 
 results_queue = Queue()
 
-ser = Serial(options.serial_port, 115200, timeout=options.askrate)
+ser = Serial(options.serial_port, 115200, timeout=askrate)
 
 netman = Net_manager()
 reader = Reader()

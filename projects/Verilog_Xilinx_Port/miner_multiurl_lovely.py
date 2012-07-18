@@ -143,7 +143,7 @@ class Writer(Thread):
             
             ser.write(payload)
             
-            result = golden.wait(options.askrate)
+            result = golden.wait(askrate)
 
             if result:
                 golden.clear()
@@ -228,6 +228,7 @@ parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyS0", he
 (options, args) = parser.parse_args()
 
 stride = int(options.miners)
+askrate = int(options.askrate)
 
 golden = Event()
 
@@ -236,14 +237,14 @@ if len(options.url) == 0:
 
 penalties = [Queue() for u in options.url]
 
-rpc_timeout = 2*options.askrate
+rpc_timeout = 2 * askrate
 
 # Only used for getting work
 proxies = [lovely_proxy(u, rpc_timeout) for u in options.url]
 
 results_queue = Queue()
 
-ser = Serial(options.serial_port, 115200, timeout=options.askrate)
+ser = Serial(options.serial_port, 115200, timeout=askrate)
 
 netman = Net_manager()
 reader = Reader()

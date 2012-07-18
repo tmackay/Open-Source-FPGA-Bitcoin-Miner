@@ -92,7 +92,7 @@ class Writer(Thread):
             
             ser.write(payload)
             
-            result = golden.wait(options.askrate)
+            result = golden.wait(askrate)
 
             if result:
                 golden.clear()
@@ -168,6 +168,7 @@ parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyS0", he
 (options, args) = parser.parse_args()
 
 stride = int(options.miners)
+askrate = int(options.askrate)
 
 golden = Event()
 
@@ -175,7 +176,7 @@ bitcoin = ServiceProxy(options.url)
 
 results_queue = Queue()
 
-ser = Serial(options.serial_port, 115200, timeout=options.askrate)
+ser = Serial(options.serial_port, 115200, timeout=askrate)
 
 reader = Reader()
 writer = Writer()
