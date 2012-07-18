@@ -64,7 +64,7 @@ class Net_manager(Thread):
             pensizes = [x.qsize() for x in penalties]
             self.urlindex = pensizes.index(min(pensizes))
 
-            #print(pensizes, self.urlindex)
+            print(pensizes, self.urlindex)
             sleep(timeout)
 
 class Reader(Thread):
@@ -143,6 +143,9 @@ class Submitter(Thread):
         self.nonce = nonce
         self.urlindex = urlindex
 
+        # Make a new proxy for sending, to avoid threading clashes
+        self.proxy = ServiceProxy(options.url[self.urlindex])
+
     def run(self):
         # This thread will be created upon every submit, as they may
         # come in sooner than the submits finish.
@@ -160,7 +163,8 @@ class Submitter(Thread):
         data = self.block[:152] + hrnonce + self.block[160:]
 
         try:
-            result = proxies[self.urlindex].getwork(data)
+            #result = proxies[self.urlindex].getwork(data)
+            result = self.proxy.getwork(data)
             print("Upstream result: " + str(result))
         except:
             penalties[self.urlindex].put(0)
@@ -218,6 +222,7 @@ if len(options.url) == 0:
     options.url = ["http://teknohog.cluster:xilinx@api2.bitcoin.cz:8332/"]
 
 penalties = [Queue() for u in options.url]
+# Only used for getting work
 proxies = [ServiceProxy(u) for u in options.url]
 
 results_queue = Queue()
