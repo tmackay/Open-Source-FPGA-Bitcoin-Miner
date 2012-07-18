@@ -83,7 +83,7 @@ class Reader(Thread):
             if len(nonce) == 4:
                 # Keep this order, because writer.block will be
                 # updated due to the golden event.
-                submitter = Submitter(writer.block, nonce)
+                submitter = Submitter(writer.block, nonce, writer.urlindex)
                 submitter.start()
                 golden.set()
 
@@ -105,15 +105,17 @@ class Writer(Thread):
 
     def run(self):
         while True:
+            # cache this index, we need it later for both submitters
+            # and penalties
+            self.urlindex = netman.urlindex
+
             try:
-                # cache this index, as it may change while waiting
-                i = netman.urlindex
-                work = proxies[i].getwork()
+                work = proxies[self.urlindex].getwork()
                 self.block = work['data']
                 self.midstate = work['midstate']
             except:
+                penalties[self.urlindex].put(0)
                 print("RPC getwork error")
-                penalties[i].put(0)
                 # In this case, keep crunching with the old data. It will get 
                 # stale at some point, but it's better than doing nothing.
 
@@ -134,11 +136,12 @@ class Writer(Thread):
                 golden.clear()
 
 class Submitter(Thread):
-    def __init__(self, block, nonce):
+    def __init__(self, block, nonce, urlindex):
         Thread.__init__(self)
 
         self.block = block
         self.nonce = nonce
+        self.urlindex = urlindex
 
     def run(self):
         # This thread will be created upon every submit, as they may
@@ -157,13 +160,11 @@ class Submitter(Thread):
         data = self.block[:152] + hrnonce + self.block[160:]
 
         try:
-            # cache this index, as it may change while waiting
-            i = netman.urlindex
-            result = proxies[i].getwork(data)
+            result = proxies[self.urlindex].getwork(data)
             print("Upstream result: " + str(result))
         except:
+            penalties[self.urlindex].put(0)
             print("RPC send error")
-            penalties[i].put(0)
             # a sensible boolean for stats
             result = False
 
