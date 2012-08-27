@@ -1,5 +1,22 @@
-Terasic DE2-115 FPGA Open-Source Bitcoin Miner
-==============================================
+Open-Source FPGA Bitcoin Miner
+==============================
+
+A fork by teknohog to enable platform independence, serial port
+communications and clustering. My projecs include
+
+* Verilog_Xilinx_Port
+* DE2_115_makomk_serial
+* DE2_115_cluster
+* Xilinx_cluster
+
+All of these use the same Python mining script found under
+Verilog_Xilinx_Port. The two multiurl versions are somewhat
+experimental.
+
+For donations please use either of the following currencies.
+BTC: 1HkL2iLLQe3KJuNCgKPc8ViZs83NJyyQDM
+LTC: LMuSoipjtRtPwD8VFyKypUTt6nXQHH8zW2
+
 
 --------------------------------------------------------------------------------
 Copyright (C) 2011 fpgaminer@bitcoin-mining.com
