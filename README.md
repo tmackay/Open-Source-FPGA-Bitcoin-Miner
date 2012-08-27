@@ -14,7 +14,9 @@ Verilog_Xilinx_Port. The two multiurl versions are somewhat
 experimental.
 
 For donations please use either of the following currencies.
+
 BTC: 1HkL2iLLQe3KJuNCgKPc8ViZs83NJyyQDM
+
 LTC: LMuSoipjtRtPwD8VFyKypUTt6nXQHH8zW2
 
 
