@@ -180,10 +180,12 @@ class Submitter(Thread):
             result = self.proxy.getwork(data)
             print("Upstream result: " + str(result))
         except:
-            penalties[self.urlindex].put(0)
             print("RPC send error")
             # a sensible boolean for stats
             result = False
+
+        if not result:
+            penalties[self.urlindex].put(0)
 
         results_queue.put(result)
 
