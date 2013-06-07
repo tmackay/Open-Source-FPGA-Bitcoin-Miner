@@ -125,8 +125,8 @@ set_global_assignment -name VERILOG_FILE fpgaminer_top.v
 set_global_assignment -name VERILOG_FILE main_pll.v
 set_global_assignment -name VERILOG_FILE serial.v
 set_global_assignment -name VERILOG_FILE hexdisp_de2.v
-set_global_assignment -name VERILOG_FILE async_transmitter.v
-set_global_assignment -name VERILOG_FILE async_receiver.v
+set_global_assignment -name VERILOG_FILE "../KC705_experimental/uart_receiver.v"
+set_global_assignment -name VERILOG_FILE "../KC705_experimental/uart_transmitter.v"
 set_global_assignment -name VERILOG_FILE "../../src/sha-256-functions.v"
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
