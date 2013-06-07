@@ -22,6 +22,12 @@
 `timescale 1ns/1ps
 
 module fpgaminer_top (osc_clk, RxD, TxD, segment, disp_switch);
+`ifdef SERIAL_CLK
+   parameter comm_clk_frequency = `SERIAL_CLK;
+`else
+   parameter comm_clk_frequency = 109_000_000;
+`endif
+
 	// The LOOP_LOG2 parameter determines how unrolled the SHA-256
 	// calculations are. For example, a setting of 1 will completely
 	// unroll the calculations, resulting in 128 rounds and a large, fast
@@ -93,7 +99,7 @@ module fpgaminer_top (osc_clk, RxD, TxD, segment, disp_switch);
    input 	     RxD;
    wire 	     rx_done;
    
-   serial_receive serrx (.clk(hash_clk), .RxD(RxD), .midstate(midstate_vw), .data2(data2_vw), .rx_done(rx_done));
+   serial_receive #(.comm_clk_frequency(comm_clk_frequency)) serrx (.clk(hash_clk), .RxD(RxD), .midstate(midstate_vw), .data2(data2_vw), .rx_done(rx_done));
    
 	//// Virtual Wire Output
 	reg [31:0] golden_nonce = 0;
@@ -101,8 +107,7 @@ module fpgaminer_top (osc_clk, RxD, TxD, segment, disp_switch);
    wire 	   serial_busy;
    output 	   TxD;
 
-   serial_transmit sertx (.clk(hash_clk), .TxD(TxD), .send(serial_send), .busy(serial_busy), .word(golden_nonce));
-   
+   serial_transmit #(.comm_clk_frequency(comm_clk_frequency)) sertx (.clk(hash_clk), .TxD(TxD), .send(serial_send), .busy(serial_busy), .word(golden_nonce));
 
 	//// Control Unit
 	reg is_golden_ticket = 1'b0;
