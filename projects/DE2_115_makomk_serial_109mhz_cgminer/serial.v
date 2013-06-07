@@ -1,5 +1,9 @@
 // by teknohog, replaces virtual_wire by rs232
 
+// Now using fpgaminer's uart code instead of fpga4fun's. Besides
+// GPL3, the practical difference is that instead of TxD_busy we have
+// its inverse tx_ready.
+
 module serial_receive(clk, RxD, midstate, data2, rx_done);
    input      clk;
    input      RxD;
@@ -7,20 +11,16 @@ module serial_receive(clk, RxD, midstate, data2, rx_done);
    wire       RxD_data_ready;
    wire [7:0] RxD_data;
 
-   async_receiver deserializer(.clk(clk), .RxD(RxD), .RxD_data_ready(RxD_data_ready), .RxD_data(RxD_data));
-
+   parameter comm_clk_frequency = 109_000_000;
+   
+   uart_receiver #(.comm_clk_frequency(comm_clk_frequency)) urx (.clk(clk), .uart_rx(RxD), .tx_new_byte(RxD_data_ready), .tx_byte(RxD_data));
+   
    output [255:0] midstate;
    output [255:0] data2;
 
    output 	  rx_done;
    
    // 256 bits midstate + 256 bits data at the same time = 64 bytes
-
-   // Might be a good idea to add some fixed start and stop sequences,
-   // so we really know we got all the data and nothing more. If a
-   // test for these fails, should ask for new data, so it needs more
-   // logic on the return side too. The check bits could be legible
-   // 7seg for quick feedback :)
    
    reg [511:0] input_buffer;
    reg [511:0] input_copy;
@@ -54,11 +54,12 @@ module serial_receive(clk, RxD, midstate, data2, rx_done);
 endmodule // serial_receive
 
 module serial_transmit (clk, TxD, busy, send, word);
+   parameter comm_clk_frequency = 109_000_000;
    
    // split 4-byte output into bytes
 
    wire TxD_start;
-   wire TxD_busy;
+   wire TxD_ready;
    
    reg [7:0]  out_byte;
    reg        serial_start;
@@ -79,22 +80,6 @@ module serial_transmit (clk, TxD, busy, send, word);
 
    always @(posedge clk)
      begin
-	/*
-	case (mux_state)
-	  4'b0000:
-	    if (send)
-	      begin
-		 mux_state <= 4'b1000;
-		 word_copy <= word;
-	      end  
-	  4'b1000: out_byte <= word_copy[31:24];
-	  4'b1010: out_byte <= word_copy[23:16];
-	  4'b1100: out_byte <= word_copy[15:8];
-	  4'b1110: out_byte <= word_copy[7:0];
-	  default: mux_state <= 4'b0000;
-	endcase // case (mux_state)
-	 */
-
 	// Testing for busy is problematic if we are keeping the
 	// module busy all the time :-/ So we need some wait stages
 	// between the bytes.
@@ -105,7 +90,7 @@ module serial_transmit (clk, TxD, busy, send, word);
 	     word_copy <= word;
 	  end  
 
-	else if (mux_state[3] && ~mux_state[0] && !TxD_busy)
+	else if (mux_state[3] && ~mux_state[0] && TxD_ready)
 	  begin
 	     serial_start <= 1;
 	     mux_state <= mux_state + 1;
@@ -118,9 +103,10 @@ module serial_transmit (clk, TxD, busy, send, word);
 	else if (mux_state[3] && mux_state[0])
 	  begin
 	     serial_start <= 0;
-	     if (!TxD_busy) mux_state <= mux_state + 1;
+	     if (TxD_ready) mux_state <= mux_state + 1;
 	  end
      end
 
-   async_transmitter serializer(.clk(clk), .TxD(TxD), .TxD_start(TxD_start), .TxD_data(out_byte), .TxD_busy(TxD_busy));
+   uart_transmitter #(.comm_clk_frequency(comm_clk_frequency)) utx (.clk(clk), .uart_tx(TxD), .rx_new_byte(TxD_start), .rx_byte(out_byte), .tx_ready(TxD_ready));
+
 endmodule // serial_send

@@ -11,13 +11,6 @@ like fried FPGAs for breakfast, USE A HEATSINK!
 Build notes
 -----------
 
-To build the code, download and unzip
-
-http://www.fpga4fun.com/files/async.zip
-
-Change the clock frequency in both async_* files to 109 MHz. Proceed
-building the project fpgaminer as usual.
-
 The fpgaminer.sof included here uses TTL level serial at pins 3 and 5
 in the small ribbon connector. Comment/uncomment pins in fpgaminer.qsf
 if you want the real RS232 port instead.
