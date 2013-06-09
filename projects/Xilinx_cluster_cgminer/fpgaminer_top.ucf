@@ -1,0 +1,89 @@
+# UCF for a Nexys2 500K board
+
+NET "osc_clk" LOC = "B8";
+
+# serial port receive & transmit
+NET "RxD" LOC = "U6";
+NET "TxD" LOC = "P9";
+
+# TTL level serial port: ja3 = rxd, ja2 = txd
+#NET "extminer_txd<0>" LOC = "K12";
+#NET "extminer_rxd<0>" LOC = "L17";
+
+# TxD on top row, RxD on bottom
+#NET "extminer_txd<0>" LOC = "L15";
+#NET "extminer_rxd<0>" LOC = "K13";
+
+#NET "extminer_txd<1>" LOC = "M13";
+#NET "extminer_rxd<1>" LOC = "P17";
+
+#NET "extminer_txd<2>" LOC = "T17";
+#NET "extminer_rxd<2>" LOC = "U18";
+
+#NET "extminer_txd<3>" LOC = "G15";
+#NET "extminer_rxd<3>" LOC = "H15";
+
+#NET "extminer_txd<4>" LOC = "H16";
+#NET "extminer_rxd<4>" LOC = "J12";
+
+#NET "extminer_txd<5>" LOC = "P18";
+#NET "extminer_rxd<5>" LOC = "J14";
+
+# JTAG buffering: TMS on top row, TCK on bottom, always next to the
+# serial ports
+
+# JA4/8
+#NET "tmsbuf_in" LOC = "M15";
+#NET "tckbuf_in" LOC = "M16";
+
+#NET "tmsbuf_out<0>" LOC = "K12";
+#NET "tckbuf_out<0>" LOC = "L16";
+
+#NET "tmsbuf_out<1>" LOC = "R18";
+#NET "tckbuf_out<1>" LOC = "R16";
+
+#NET "tmsbuf_out<2>" LOC = "R15";
+#NET "tckbuf_out<2>" LOC = "T18";
+
+#NET "tmsbuf_out<3>" LOC = "J16";
+#NET "tckbuf_out<3>" LOC = "F14";
+
+#NET "tmsbuf_out<4>" LOC = "G13";
+#NET "tckbuf_out<4>" LOC = "G16";
+
+#NET "tmsbuf_out<5>" LOC = "N18";
+#NET "tckbuf_out<5>" LOC = "J15";
+
+# Button 0
+#NET "reset" LOC = "B18";
+
+# LEDs starting from the left; the last 4 are shared with some
+#  rightmost PMOD pins
+NET "led<2>" LOC = "R4";
+NET "led<1>" LOC = "F4";
+NET "led<0>" LOC = "P15";
+#NET "led<4>" LOC = "E17";
+#NET "led<3>" LOC = "K14";
+#NET "led<2>" LOC = "K15";
+#NET "led<1>" LOC = "J15";
+#NET "led<0>" LOC = "J14";
+
+# J-board
+
+#NET osc_clk LOC = "D9"; #48.0MHz
+
+#NET TxD LOC = "K15";               # fpga_test0
+#NET RxD LOC = "K14";               # fpga_test1
+#NET RxD LOC = "J17";               # fpga_test2
+#NET TxD LOC = "J16";               # fpga_test3
+#NET RxD LOC = "J15";               # fpga_test4
+#NET extminer_txd<0> LOC = "J14";               # fpga_test5
+#NET RxD LOC = "J12";               # fpga_test6
+#NET extminer_rxd<0> LOC = "J13";               # fpga_test7
+
+#NET "gpio_led2" LOC = "E15";   # fpga test led
+
+# Order is R, G, B
+#NET led<0> LOC = "H16";
+#NET led<1> LOC = "H17";
+#NET led<2> LOC = "H14";
