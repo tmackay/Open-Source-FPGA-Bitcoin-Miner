@@ -57,46 +57,24 @@ main_pll pll_blk (.CLKIN_IN(osc_clk), .CLK2X_OUT(hash_clk));
 (instead of the one with .CLK0_OUT)
 
 Also, since hash_clk is used by everything including the serial port,
-you need to change the frequency in async_*.v to the doubled value.
+you need to change comm_clk_frequency to the doubled value.
 
 
 Usage
 -----
 
-1. Download the RS232 code from
-
-http://www.fpga4fun.com/files/async.zip
-
-and unzip it into sources/hdl to go with the other files. Change the
-clock frequency definition in both files to suit your oscillator.
-
-Note that this async code is not free software, and it cannot be
-redistributed without a permission from fpga4fun.
-
-(I have discussed this with the author of fpga4fun, and he has OK'd
-this kind of linking. However, it might be more convenient in the
-future to have our own serial code here.)
-
-
-2. Build the design and program the FPGA. At the moment, the source is
-treated as the single fpgaminer_top file, using includes.
-
-Here are some ways I have used succesfully, you can of course use
-Xilinx ISE or something else:
-
-2a. boldport:
-
-$ make -f scripts/Makefile TOP_PATH=`pwd` bit
-
-This builds a bit file for a Spartan 3E 500K. To generate a suitable
-Makefile for other FPGAs, see https://www.boldport.com/.
-
-2b. Nexys2prog and its associated build script:
+1. Build the design and program the FPGA. At the moment, the source is
+treated as the single fpgaminer_top file, using includes. For Linux
+command line builds, you could try 
 
 http://ixo-jtag.sourceforge.net/nexys2-linux-howto.html
+
+or
+
+http://iki.fi/teknohog/hacks/fpga/xilbuild.sh
  
 
-3. Run miner.py with your pool/server URL and possibly other
+2. Run miner.py with your pool/server URL and possibly other
 options. (The URL defaults to my account, in case you want to donate
 some shares :) It requires a few non-standard libraries, pyserial and
 json-rpc.
@@ -121,6 +99,10 @@ Todo
 
 Release notes
 -------------
+
+2013-06-12
+
+* New, GPL3 UART code
 
 2011-07-14
 

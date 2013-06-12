@@ -22,15 +22,24 @@
 `include "main_pll.v"
 //`include "main_pll_2x.v"
 
-`include "../../../../src/sha-256-functions.v"
-`include "../../../../src/sha256_transform.v"
-`include "serial.v" // replaces virtual_wire
+`include "../../src/sha-256-functions.v"
+`include "../../src/sha256_transform.v"
+
+// replaces virtual_wire
+`include "../KC705_experimental/uart_receiver.v"
+`include "../KC705_experimental/uart_transmitter.v"
+`include "../DE2_115_makomk_serial_109mhz_cgminer/serial.v"
 
 `include "raw7seg.v"
 
 `timescale 1ns/1ps
 
 module fpgaminer_top (osc_clk, RxD, TxD, anode, segment, disp_switch);
+`ifdef SERIAL_CLK
+   parameter comm_clk_frequency = `SERIAL_CLK;
+`else
+   parameter comm_clk_frequency = 50_000_000;
+`endif
 
 	// The LOOP_LOG2 parameter determines how unrolled the SHA-256
 	// calculations are. For example, a setting of 1 will completely
@@ -102,17 +111,16 @@ module fpgaminer_top (osc_clk, RxD, TxD, anode, segment, disp_switch);
 	wire [255:0] midstate_vw, data2_vw;
 
    input 	     RxD;
+   serial_receive #(.comm_clk_frequency(comm_clk_frequency)) serrx (.clk(hash_clk), .RxD(RxD), .midstate(midstate_vw), .data2(data2_vw));
    
-   serial_receive serrx (.clk(hash_clk), .RxD(RxD), .midstate(midstate_vw), .data2(data2_vw));
+//, .rx_done(rx_done));
    
 	//// Virtual Wire Output
 	reg [31:0] golden_nonce = 0;
    reg 		   serial_send;
    wire 	   serial_busy;
    output 	   TxD;
-
-   serial_transmit sertx (.clk(hash_clk), .TxD(TxD), .send(serial_send), .busy(serial_busy), .word(golden_nonce));
-   
+   serial_transmit #(.comm_clk_frequency(comm_clk_frequency)) sertx (.clk(hash_clk), .TxD(TxD), .send(serial_send), .busy(serial_busy), .word(golden_nonce));
 
 	//// Control Unit
 	reg is_golden_ticket = 1'b0;
