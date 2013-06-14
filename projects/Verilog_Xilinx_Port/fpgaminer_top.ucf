@@ -6,6 +6,8 @@ NET "osc_clk" LOC = "B8";
 NET "RxD" LOC = "U6";
 NET "TxD" LOC = "P9";
 
+# rightmost slide switch
+NET "disp_switch" LOC = "G18";
 
 # 7 segment display, in the order that fpga4fun uses
 NET "segment<7>" LOC = "L18";
@@ -22,8 +24,9 @@ NET "anode<1>" LOC = "H17";
 NET "anode<2>" LOC = "C18";
 NET "anode<3>" LOC = "F15";
 
-#NET "led<7>" LOC = "R4";
-#NET "led<6>" LOC = "F4";
+# LEDs starting from the left
+NET "led<1>" LOC = "R4";
+NET "led<0>" LOC = "F4";
 #NET "led<5>" LOC = "P15";
 #NET "led<4>" LOC = "E17";
 #NET "led<3>" LOC = "K14";

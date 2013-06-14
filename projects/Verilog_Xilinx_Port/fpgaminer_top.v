@@ -34,7 +34,7 @@
 
 `timescale 1ns/1ps
 
-module fpgaminer_top (osc_clk, RxD, TxD, anode, segment, disp_switch);
+module fpgaminer_top (osc_clk, RxD, TxD, anode, segment, disp_switch, led);
 `ifdef SERIAL_CLK
    parameter comm_clk_frequency = `SERIAL_CLK;
 `else
@@ -202,6 +202,11 @@ module fpgaminer_top (osc_clk, RxD, TxD, anode, segment, disp_switch);
    
 //   raw7seg disp(.clk(hash_clk), .segment(segment_data), .anode(anode), .word({midstate_vw[15:0], data2_vw[15:0]}));
    raw7seg disp(.clk(hash_clk), .segment(segment_data), .anode(anode), .word(golden_nonce));
+
+   // Serial line activity
+   output [1:0] led;
+   assign led[1] = disp_switch & ~RxD;
+   assign led[0] = disp_switch & ~TxD;
    
 endmodule
 

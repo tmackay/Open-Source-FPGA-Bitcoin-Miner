@@ -85,6 +85,16 @@ http://pyserial.sourceforge.net/
 http://json-rpc.org/wiki/python-json-rpc
 
 
+Hash rate
+---------
+
+The hash rate equals the hash clock frequency / 2^LOOP_LOG2. For
+example, at 100 MHz and LOOP_LOG2=5, you get 3.125 Mhash/s.
+
+At this rate, the expected time between results is 22.9 minutes:
+2^32 / 3125000 = 1374 s.
+
+
 Todo
 ----
 
