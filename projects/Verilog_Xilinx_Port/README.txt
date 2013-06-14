@@ -63,7 +63,12 @@ you need to change comm_clk_frequency to the doubled value.
 Usage
 -----
 
-1. Build the design and program the FPGA. At the moment, the source is
+1. Edit comm_clk_frequency to match the hash clock frequency (by
+default, this is equal to the onboard oscillator frequency.)
+Alternatively, you can set this externally with the build option
+SERIAL_CLK.
+
+2. Build the design and program the FPGA. At the moment, the source is
 treated as the single fpgaminer_top file, using includes. For Linux
 command line builds, you could try 
 
@@ -72,9 +77,8 @@ http://ixo-jtag.sourceforge.net/nexys2-linux-howto.html
 or
 
 http://iki.fi/teknohog/hacks/fpga/xilbuild.sh
- 
 
-2. Run miner.py with your pool/server URL and possibly other
+3. Run miner.py with your pool/server URL and possibly other
 options. (The URL defaults to my account, in case you want to donate
 some shares :) It requires a few non-standard libraries, pyserial and
 json-rpc.
