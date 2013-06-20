@@ -25,6 +25,7 @@ module serial_receive(clk, RxD, midstate, data2, rx_done);
    reg [511:0] input_buffer;
    reg [511:0] input_copy;
    reg [6:0]   demux_state = 7'b0000000;
+   reg [15:0]  timer = 0;
 
    assign midstate = input_copy[511:256];
    assign data2 = input_copy[255:0];
@@ -48,6 +49,13 @@ module serial_receive(clk, RxD, midstate, data2, rx_done);
 	      input_buffer <= input_buffer << 8;
 	      input_buffer[7:0] <= RxD_data;
 	      demux_state <= demux_state + 1;
+	      timer <= 0;
+	   end
+	 else
+	   begin
+	      timer <= timer + 1;
+	      if (timer == 65535)
+	        demux_state <= 0;
 	   end
      endcase // case (demux_state)
    
