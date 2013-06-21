@@ -25,7 +25,7 @@ module serial_receive(clk, RxD, midstate, data2, rx_done);
    reg [511:0] input_buffer;
    reg [511:0] input_copy;
    reg [6:0]   demux_state = 7'b0000000;
-   reg [15:0]  timer = 0;
+   reg [23:0]  timer = 0;
 
    assign midstate = input_copy[511:256];
    assign data2 = input_copy[255:0];
@@ -54,7 +54,11 @@ module serial_receive(clk, RxD, midstate, data2, rx_done);
 	 else
 	   begin
 	      timer <= timer + 1;
-	      if (timer == 65535)
+	      // Timeout after 8 million clock at 100Mhz is 80ms, which should be
+	      // OK for all sensible clock speeds eg 20MHz is 400ms, 200MHz is 40ms
+	      // TODO ought to parameterise, but this should be fine (4800 baud is
+	      // one byte every 2ms approx)
+	      if (timer & 24'h800000)
 	        demux_state <= 0;
 	   end
      endcase // case (demux_state)
