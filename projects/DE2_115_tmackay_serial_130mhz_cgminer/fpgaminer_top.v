@@ -25,7 +25,7 @@ module fpgaminer_top (osc_clk, RxD, TxD, segment, disp_switch);
 `ifdef SERIAL_CLK
    parameter comm_clk_frequency = `SERIAL_CLK;
 `else
-   parameter comm_clk_frequency = 109_000_000;
+   parameter comm_clk_frequency = 130_000_000;
 `endif
 
 	// The LOOP_LOG2 parameter determines how unrolled the SHA-256
@@ -37,7 +37,7 @@ module fpgaminer_top (osc_clk, RxD, TxD, segment, disp_switch);
 	// half the speed. 3 will be 32 rounds, with 1/4th the size and speed.
 	// And so on.
 	//
-	// Valid range: [0, 5]
+	// Valid range: [0, 5] - currently broken with Dadda quasi-pipeline mod
 `ifdef CONFIG_LOOP_LOG2
 	parameter LOOP_LOG2 = `CONFIG_LOOP_LOG2;
 `else
@@ -160,7 +160,7 @@ module fpgaminer_top (osc_clk, RxD, TxD, segment, disp_switch);
 		begin
 			// TODO: Find a more compact calculation for this
 			if (LOOP == 1)
-                                golden_nonce <= nonce - 32'd133; //32'd131;
+                golden_nonce <= nonce - 32'd138;
 			else if (LOOP == 2)
 				golden_nonce <= nonce - 32'd66;
 			else
@@ -178,10 +178,10 @@ module fpgaminer_top (osc_clk, RxD, TxD, segment, disp_switch);
 		else
 		  serial_send <= 0;
 	   
-`ifdef SIM
-		if (!feedback_d1)
-			$display ("nonce: %8x\nhash2: %64x\n", nonce, hash2);
-`endif
+//`ifdef SIM
+//		if (!feedback_d1)
+//			$display ("nonce: %8x\nhash2: %64x\n", nonce, hash2);
+//`endif
 	end
 
    // die debuggenlichten

@@ -96,7 +96,7 @@ module main_pll (
 		altpll_component.bandwidth_type = "AUTO",
 		altpll_component.clk0_divide_by = 50,
 		altpll_component.clk0_duty_cycle = 50,
-		altpll_component.clk0_multiply_by = 109,
+		altpll_component.clk0_multiply_by = 130,
 		altpll_component.clk0_phase_shift = "0",
 		altpll_component.compensate_clock = "CLK0",
 		altpll_component.inclk0_input_frequency = 20000,

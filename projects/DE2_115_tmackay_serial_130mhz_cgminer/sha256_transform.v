@@ -19,7 +19,6 @@
 * 
 */
 
-
 `timescale 1ns/1ps
 
 // A quick define to help index 32-bit words inside a larger register.
@@ -66,10 +65,10 @@ module sha256_transform #(
 		32'h90befffa, 32'ha4506ceb, 32'hbef9a3f7, 32'hc67178f2};
 
 
-	reg [31:0] first_t1_partial = 32'd0;
 	reg [255:0] state_d0 = 0;
 	reg [511:0] input_d0 = 0;
-
+	
+	wire [31:0] first_initial_bin, second_initial_bin, initial_gin;
 
 	genvar i;
 
@@ -80,12 +79,10 @@ module sha256_transform #(
 		for (i = 0; i < 64/LOOP; i = i + 1) begin : HASHERS
 			wire [31:0] new_w15;
 			wire [255:0] state;
-			wire [31:0] t1_partial_next;
 			wire [31:0] cur_w0, cur_w1, cur_w9, cur_w14;
 			reg [479:0] new_w14to0;
 
-			//wire [31:0] K = Ks[32*(63-LOOP*i-cnt) +: 32];
-			wire [31:0] K_next = Ks[32*(63-LOOP*i-cnt-1) +: 32];
+			wire [31:0] K = Ks[32*(63-LOOP*i-cnt) +: 32];
 
 
 			if (i == 0)
@@ -93,7 +90,7 @@ module sha256_transform #(
 			else if (i == 1)
 				shifter_32b #(.LENGTH(1)) shift_w14 (clk, input_d0[511:480], cur_w14);
 			else
-				shifter_32b #(.LENGTH(1)) shift_w14 (clk, HASHERS[i-2].new_w15, cur_w14);
+				assign cur_w14 = HASHERS[i-2].new_w15; // new_w15 will be delayed by extra cycle
 
 
 			if (i == 0)
@@ -117,30 +114,36 @@ module sha256_transform #(
 			else
 				shifter_32b # (.LENGTH(1)) shift_w0 (clk, HASHERS[i-1].cur_w1, cur_w0);
 
+			// Modelsim can't resolve U in testbench with conditional module U code. Replace with conditional wires.
+			wire [255:0] rx_state_w;
+			wire [31:0] rx_bin_w, rx_gin_w;
+			sha256_digester U (
+				.clk(clk),
+				.rx_k(K),
+				.rx_state(rx_state_w),
+				.rx_w0(cur_w0),
+				.rx_bin(rx_bin_w), // b from 2 hashers back
+				.rx_gin(rx_gin_w), // g from 1 hasher back
+				.tx_state(state)
+			);
 
-
-
-
-			if(i == 0)
-				sha256_digester U (
-					.clk(clk),
-					.k_next(K_next),
-					.rx_state(feedback ? state : state_d0),
-					.rx_t1_partial(first_t1_partial),
-					.rx_w1(cur_w1),
-					.tx_state(state),
-					.tx_t1_partial(t1_partial_next)
-				);
+			if (i==0)
+				assign rx_state_w = feedback ? state : state_d0;
 			else
-				sha256_digester U (
-					.clk(clk),
-					.k_next(K_next),
-					.rx_state(HASHERS[i-1].state),
-					.rx_t1_partial(HASHERS[i-1].t1_partial_next),
-					.rx_w1(cur_w1),
-					.tx_state(state),
-					.tx_t1_partial(t1_partial_next)
-				);
+				assign rx_state_w = HASHERS[i-1].state;
+
+			if (i==0)
+				assign rx_gin_w = initial_gin;
+			else
+				assign rx_gin_w = HASHERS[i-1].rx_state_w[`IDX(6)];
+
+			if (i==0)
+				assign rx_bin_w = first_initial_bin;
+			else if (i==1)
+				assign rx_bin_w = second_initial_bin;
+			else
+				assign rx_bin_w = HASHERS[i-2].rx_state_w[`IDX(1)];
+			
 
 			sha256_update_w upd_w (
 				.clk(clk),
@@ -154,24 +157,37 @@ module sha256_transform #(
 
 	endgenerate
 
+	wire [255:0] shifted_state_w;
+	// delay input state. E, F, G by 2 cycles, A, B, C by 3 cycles while we wait for w0 to work down the pipeline
+	shifter_32b #(.LENGTH(3)) shift_a (clk, rx_state[`IDX(0)], shifted_state_w[`IDX(0)]); //A
+	shifter_32b #(.LENGTH(3)) shift_b (clk, rx_state[`IDX(1)], shifted_state_w[`IDX(1)]); //B	
+	shifter_32b #(.LENGTH(2)) shift_c2 (clk, rx_state[`IDX(2)], second_initial_bin); //C - also need C for 2nd hasher's B_in in 2 cycles
+	shifter_32b #(.LENGTH(1)) shift_c (clk, second_initial_bin, shifted_state_w[`IDX(2)]); //C
+	shifter_32b #(.LENGTH(1)) shift_d (clk, rx_state[`IDX(3)], first_initial_bin); //D - need D in 1 cycle for 1st hasher's B_in
+
+	shifter_32b #(.LENGTH(2)) shift_e (clk, rx_state[`IDX(4)], shifted_state_w[`IDX(4)]); //E
+	shifter_32b #(.LENGTH(2)) shift_f (clk, rx_state[`IDX(5)], shifted_state_w[`IDX(5)]); //F
+	shifter_32b #(.LENGTH(2)) shift_g (clk, rx_state[`IDX(6)], shifted_state_w[`IDX(6)]); //G
+	shifter_32b #(.LENGTH(1)) shift_h (clk, rx_state[`IDX(7)], initial_gin); //H - need H in 1 cycle for 1st hasher's G_in
+
+	// delay output to resync
+	wire [255:0] shifted_output;
+	assign shifted_output[`IDX(0)] = rx_state[`IDX(0)] + HASHERS[64/LOOP-6'd1].state[`IDX(0)]; // A
+	assign shifted_output[`IDX(1)] = rx_state[`IDX(1)] + HASHERS[64/LOOP-6'd1].state[`IDX(1)]; // B
+	assign shifted_output[`IDX(2)] = rx_state[`IDX(2)] + HASHERS[64/LOOP-6'd1].state[`IDX(2)]; // C
+	assign shifted_output[`IDX(3)] = rx_state[`IDX(3)] + HASHERS[64/LOOP-6'd1].state[`IDX(3)]; // D
+	shifter_32b #(.LENGTH(1)) shift_e_out (clk, rx_state[`IDX(4)] + HASHERS[64/LOOP-6'd1].state[`IDX(4)], shifted_output[`IDX(4)]); //E
+	shifter_32b #(.LENGTH(1)) shift_f_out (clk, rx_state[`IDX(5)] + HASHERS[64/LOOP-6'd1].state[`IDX(5)], shifted_output[`IDX(5)]); //F
+	shifter_32b #(.LENGTH(1)) shift_g_out (clk, rx_state[`IDX(6)] + HASHERS[64/LOOP-6'd1].state[`IDX(6)], shifted_output[`IDX(6)]); //G
+	shifter_32b #(.LENGTH(1)) shift_h_out (clk, rx_state[`IDX(7)] + HASHERS[64/LOOP-6'd1].state[`IDX(7)], shifted_output[`IDX(7)]); //H
+	
 	always @ (posedge clk)
 	begin
-		state_d0 <= rx_state;
+		state_d0 <= shifted_state_w;
 		input_d0 <= rx_input;
 
-		first_t1_partial <= rx_state[`IDX(7)] + rx_input[31:0] + 32'h428a2f98;
-
-		if (!feedback)
-		begin
-			tx_hash[`IDX(0)] <= rx_state[`IDX(0)] + HASHERS[64/LOOP-6'd1].state[`IDX(0)];
-			tx_hash[`IDX(1)] <= rx_state[`IDX(1)] + HASHERS[64/LOOP-6'd1].state[`IDX(1)];
-			tx_hash[`IDX(2)] <= rx_state[`IDX(2)] + HASHERS[64/LOOP-6'd1].state[`IDX(2)];
-			tx_hash[`IDX(3)] <= rx_state[`IDX(3)] + HASHERS[64/LOOP-6'd1].state[`IDX(3)];
-			tx_hash[`IDX(4)] <= rx_state[`IDX(4)] + HASHERS[64/LOOP-6'd1].state[`IDX(4)];
-			tx_hash[`IDX(5)] <= rx_state[`IDX(5)] + HASHERS[64/LOOP-6'd1].state[`IDX(5)];
-			tx_hash[`IDX(6)] <= rx_state[`IDX(6)] + HASHERS[64/LOOP-6'd1].state[`IDX(6)];
-			tx_hash[`IDX(7)] <= rx_state[`IDX(7)] + HASHERS[64/LOOP-6'd1].state[`IDX(7)];
-		end
+		if (!feedback) // no longer in sync with feedback due to extra delays/quasi pipeline. LOOP code needs rethink
+			tx_hash <= shifted_output;
 	end
 
 
@@ -185,34 +201,35 @@ module sha256_update_w (clk, rx_w0, rx_w1, rx_w9, rx_w14, tx_w15);
 	input [31:0] rx_w0, rx_w1, rx_w9, rx_w14;
 	output reg [31:0] tx_w15;
 
+	reg [31:0] t;
 
-	wire [31:0] s0_w, s1_w;
-
+	wire [31:0] s0_w, s1_w, w0_w;
+	
+	shifter_32b # (.LENGTH(1)) shift_w0 (clk, rx_w0, w0_w);
 	s0	s0_blk	(rx_w1, s0_w);
 	s1	s1_blk	(rx_w14, s1_w);
 
-	wire [31:0] new_w = s1_w + rx_w9 + s0_w + rx_w0;
-
-	always @ (posedge clk)
+	wire [31:0] new_t = s1_w + rx_w9 + s0_w;
+	wire [31:0] new_w = w0_w + t;
+	always @ (posedge clk) begin
+		t <= new_t;
 		tx_w15 <= new_w;
+	end
 
 endmodule
 
 
-// k_next must be the next round's k
-// W1 is the second oldest W, where normally T1 would be calculated with the
-// oldest W (W0).
-// t1_partial is a partial calculation of T1 that can be calculated by the
-// round before it.
-module sha256_digester (clk, k_next, rx_state, rx_t1_partial, rx_w1, tx_state, tx_t1_partial);
+// These hashers no longer represent a single time step, but are spread over 4 time partitions
+// bounded by the partial calculations and interleaved in the pipeline
+module sha256_digester (clk, rx_k, rx_state, rx_w0, rx_bin, rx_gin, tx_state);
 
 	input clk;
-	input [31:0] k_next, rx_t1_partial, rx_w1;
+	input [31:0] rx_k, rx_w0, rx_bin, rx_gin;
 	input [255:0] rx_state;
 
 	output reg [255:0] tx_state;
-	output reg [31:0] tx_t1_partial;
 
+	reg [31:0] kw_partial, m1_partial, m2_partial, l_partial;
 
 	wire [31:0] e0_w, e1_w, ch_w, maj_w;
 
@@ -221,24 +238,29 @@ module sha256_digester (clk, k_next, rx_state, rx_t1_partial, rx_w1, tx_state, t
 	e1	e1_blk	(rx_state[`IDX(4)], e1_w);
 	ch	ch_blk	(rx_state[`IDX(4)], rx_state[`IDX(5)], rx_state[`IDX(6)], ch_w);
 	maj	maj_blk	(rx_state[`IDX(0)], rx_state[`IDX(1)], rx_state[`IDX(2)], maj_w);
-
-	wire [31:0] t1 = rx_t1_partial + e1_w + ch_w;
-	wire [31:0] t2 = e0_w + maj_w;
-	wire [31:0] partial_t1 = rx_state[`IDX(6)] + rx_w1 + k_next;
 	
+	wire [31:0] kw = rx_w0 + rx_k;
+	wire [31:0] m1 = kw_partial + rx_bin + rx_gin;
+	wire [31:0] m2 = kw_partial + rx_gin;
+	wire [31:0] l = m2_partial + e1_w + ch_w;
+	wire [31:0] e = m1_partial + e1_w + ch_w;
+	wire [31:0] a = l_partial + e0_w + maj_w;
 
 	always @ (posedge clk)
 	begin
-		tx_t1_partial <= partial_t1;
+		kw_partial <= kw;
+		m1_partial <= m1;
+		m2_partial <= m2;
+		l_partial <= l;
 
-		tx_state[`IDX(7)] <= rx_state[`IDX(6)];
-		tx_state[`IDX(6)] <= rx_state[`IDX(5)];
-		tx_state[`IDX(5)] <= rx_state[`IDX(4)];
-		tx_state[`IDX(4)] <= rx_state[`IDX(3)] + t1;
-		tx_state[`IDX(3)] <= rx_state[`IDX(2)];
-		tx_state[`IDX(2)] <= rx_state[`IDX(1)];
-		tx_state[`IDX(1)] <= rx_state[`IDX(0)];
-		tx_state[`IDX(0)] <= t1 + t2;
+		tx_state[`IDX(7)] <= rx_state[`IDX(6)]; // H, redundant but for last hasher - should be optimised out automatically
+		tx_state[`IDX(6)] <= rx_state[`IDX(5)]; // G
+		tx_state[`IDX(5)] <= rx_state[`IDX(4)]; // F
+		tx_state[`IDX(4)] <= e;
+		tx_state[`IDX(3)] <= rx_state[`IDX(2)]; // D, redundant but for last hasher - should be optimised out automatically
+		tx_state[`IDX(2)] <= rx_state[`IDX(1)]; // C
+		tx_state[`IDX(1)] <= rx_state[`IDX(0)]; // B
+		tx_state[`IDX(0)] <= a;
 	end
 
 endmodule
