@@ -67,6 +67,7 @@ module sha256_transform #(
 
 	reg [255:0] state_d0 = 0;
 	reg [511:0] input_d0 = 0;
+	reg [31:0] initial_wk = 0;
 	
 	wire [31:0] first_initial_bin, second_initial_bin, initial_gin;
 
@@ -79,7 +80,7 @@ module sha256_transform #(
 		for (i = 0; i < 64/LOOP; i = i + 1) begin : HASHERS
 			wire [31:0] new_w15;
 			wire [255:0] state;
-			wire [31:0] cur_w0, cur_w1, cur_w9, cur_w14;
+			wire [31:0] cur_w0, cur_w1, cur_w9, cur_w14, cur_wk;
 			reg [479:0] new_w14to0;
 
 			wire [31:0] K = Ks[32*(63-LOOP*i-cnt) +: 32];
@@ -90,7 +91,7 @@ module sha256_transform #(
 			else if (i == 1)
 				shifter_32b #(.LENGTH(1)) shift_w14 (clk, input_d0[511:480], cur_w14);
 			else
-				assign cur_w14 = HASHERS[i-2].new_w15; // new_w15 will be delayed by extra cycle
+				assign cur_w14 = HASHERS[i-2].new_w15;
 
 
 			if (i == 0)
@@ -110,6 +111,12 @@ module sha256_transform #(
 			
 
 			if (i == 0)
+				//assign cur_wk = input_d0[31:0] + K; // This will become a Quad adder without reg Fmax still 129 though
+				assign cur_wk = initial_wk;
+			else
+				shifter_32b # (.LENGTH(1)) shift_wk (clk, HASHERS[i-1].cur_w1 + K, cur_wk);
+
+			if (i == 0)
 				assign cur_w0 = input_d0[31:0];
 			else
 				shifter_32b # (.LENGTH(1)) shift_w0 (clk, HASHERS[i-1].cur_w1, cur_w0);
@@ -119,11 +126,11 @@ module sha256_transform #(
 			wire [31:0] rx_bin_w, rx_gin_w;
 			sha256_digester U (
 				.clk(clk),
-				.rx_k(K),
+				//.rx_k(K), // pre-add K
 				.rx_state(rx_state_w),
-				.rx_w0(cur_w0),
-				.rx_bin(rx_bin_w), // b from 2 hashers back
-				.rx_gin(rx_gin_w), // g from 1 hasher back
+				.rx_wk(cur_wk),
+				.rx_bin(rx_bin_w), // b from 2 hashers back - need to work out what to do for LOOP code
+				.rx_gin(rx_gin_w), // g from 1 hasher back - need to work out what to do for LOOP code
 				.tx_state(state)
 			);
 
@@ -158,17 +165,17 @@ module sha256_transform #(
 	endgenerate
 
 	wire [255:0] shifted_state_w;
-	// delay input state. E, F, G by 2 cycles, A, B, C by 3 cycles while we wait for w0 to work down the pipeline
-	shifter_32b #(.LENGTH(3)) shift_a (clk, rx_state[`IDX(0)], shifted_state_w[`IDX(0)]); //A
-	shifter_32b #(.LENGTH(3)) shift_b (clk, rx_state[`IDX(1)], shifted_state_w[`IDX(1)]); //B	
-	shifter_32b #(.LENGTH(2)) shift_c2 (clk, rx_state[`IDX(2)], second_initial_bin); //C - also need C for 2nd hasher's B_in in 2 cycles
+	// delay input state. E, F, G by 1 cycle, A, B, C by 2 cycles while we wait for w0 to work down the pipeline
+	shifter_32b #(.LENGTH(2)) shift_a (clk, rx_state[`IDX(0)], shifted_state_w[`IDX(0)]); //A
+	shifter_32b #(.LENGTH(2)) shift_b (clk, rx_state[`IDX(1)], shifted_state_w[`IDX(1)]); //B	
+	shifter_32b #(.LENGTH(1)) shift_c2 (clk, rx_state[`IDX(2)], second_initial_bin); //C - also need C for 2nd hasher's B_in in 2 cycles
 	shifter_32b #(.LENGTH(1)) shift_c (clk, second_initial_bin, shifted_state_w[`IDX(2)]); //C
-	shifter_32b #(.LENGTH(1)) shift_d (clk, rx_state[`IDX(3)], first_initial_bin); //D - need D in 1 cycle for 1st hasher's B_in
+	assign first_initial_bin = rx_state[`IDX(3)]; //D - need D in 1 cycle for 1st hasher's B_in
 
-	shifter_32b #(.LENGTH(2)) shift_e (clk, rx_state[`IDX(4)], shifted_state_w[`IDX(4)]); //E
-	shifter_32b #(.LENGTH(2)) shift_f (clk, rx_state[`IDX(5)], shifted_state_w[`IDX(5)]); //F
-	shifter_32b #(.LENGTH(2)) shift_g (clk, rx_state[`IDX(6)], shifted_state_w[`IDX(6)]); //G
-	shifter_32b #(.LENGTH(1)) shift_h (clk, rx_state[`IDX(7)], initial_gin); //H - need H in 1 cycle for 1st hasher's G_in
+	shifter_32b #(.LENGTH(1)) shift_e (clk, rx_state[`IDX(4)], shifted_state_w[`IDX(4)]); //E
+	shifter_32b #(.LENGTH(1)) shift_f (clk, rx_state[`IDX(5)], shifted_state_w[`IDX(5)]); //F
+	shifter_32b #(.LENGTH(1)) shift_g (clk, rx_state[`IDX(6)], shifted_state_w[`IDX(6)]); //G
+	assign initial_gin = rx_state[`IDX(7)]; //H - need H in 1 cycle for 1st hasher's G_in
 
 	// delay output to resync
 	wire [255:0] shifted_output;
@@ -184,7 +191,8 @@ module sha256_transform #(
 	always @ (posedge clk)
 	begin
 		state_d0 <= shifted_state_w;
-		input_d0 <= rx_input;
+		input_d0 <= rx_input; // we could get rid of these regs, and extend the shifters above - which are implemented as regs anyway
+		initial_wk <= rx_input[31:0] + Ks[32*(63) +: 32]; // To save regs and shifters, need this ASAP to get started with state regs
 
 		if (!feedback) // no longer in sync with feedback due to extra delays/quasi pipeline. LOOP code needs rethink
 			tx_hash <= shifted_output;
@@ -210,7 +218,7 @@ module sha256_update_w (clk, rx_w0, rx_w1, rx_w9, rx_w14, tx_w15);
 	s1	s1_blk	(rx_w14, s1_w);
 
 	wire [31:0] new_t = s1_w + rx_w9 + s0_w;
-	wire [31:0] new_w = w0_w + t;
+	wire [31:0] new_w = w0_w + t; // Could we add K to this wire and shift it separately for digester input? (single-triple vs double-double adders)
 	always @ (posedge clk) begin
 		t <= new_t;
 		tx_w15 <= new_w;
@@ -221,15 +229,15 @@ endmodule
 
 // These hashers no longer represent a single time step, but are spread over 4 time partitions
 // bounded by the partial calculations and interleaved in the pipeline
-module sha256_digester (clk, rx_k, rx_state, rx_w0, rx_bin, rx_gin, tx_state);
+module sha256_digester (clk, rx_state, rx_wk, rx_bin, rx_gin, tx_state);
 
 	input clk;
-	input [31:0] rx_k, rx_w0, rx_bin, rx_gin;
+	input [31:0] rx_wk, rx_bin, rx_gin;
 	input [255:0] rx_state;
 
 	output reg [255:0] tx_state;
 
-	reg [31:0] kw_partial, m1_partial, m2_partial, l_partial;
+	reg [31:0] m1_partial, m2_partial, l_partial;
 
 	wire [31:0] e0_w, e1_w, ch_w, maj_w;
 
@@ -239,16 +247,14 @@ module sha256_digester (clk, rx_k, rx_state, rx_w0, rx_bin, rx_gin, tx_state);
 	ch	ch_blk	(rx_state[`IDX(4)], rx_state[`IDX(5)], rx_state[`IDX(6)], ch_w);
 	maj	maj_blk	(rx_state[`IDX(0)], rx_state[`IDX(1)], rx_state[`IDX(2)], maj_w);
 	
-	wire [31:0] kw = rx_w0 + rx_k;
-	wire [31:0] m1 = kw_partial + rx_bin + rx_gin;
-	wire [31:0] m2 = kw_partial + rx_gin;
+	wire [31:0] m1 = rx_wk + rx_bin + rx_gin;
+	wire [31:0] m2 = rx_wk + rx_gin;
 	wire [31:0] l = m2_partial + e1_w + ch_w;
 	wire [31:0] e = m1_partial + e1_w + ch_w;
 	wire [31:0] a = l_partial + e0_w + maj_w;
 
 	always @ (posedge clk)
 	begin
-		kw_partial <= kw;
 		m1_partial <= m1;
 		m2_partial <= m2;
 		l_partial <= l;

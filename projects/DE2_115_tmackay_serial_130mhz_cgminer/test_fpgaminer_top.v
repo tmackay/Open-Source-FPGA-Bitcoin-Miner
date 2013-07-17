@@ -42,22 +42,22 @@ module test_fpgaminer_top ();
 
 	genvar i;
 	generate
-	
+	//HASHERS[i-1].cur_w1
 	for (i=0; i < 64/LOOP+5; i = i + 1) begin
 		always @ (posedge clk) begin
-			if (cycle == (i+2)) $display ("%02u %08x %08x %08x %08x %08x (%08x)", cycle-2, uut.uut.HASHERS[`HSX(i-3)].U.a, uut.uut.HASHERS[`HSX(i-2)].U.e,
+			if (cycle == (i+1)) $display ("%02u %08x %08x %08x %08x %08x (%08x)", cycle-2, uut.uut.HASHERS[`HSX(i-3)].U.a, uut.uut.HASHERS[`HSX(i-2)].U.e,
 																				 uut.uut.HASHERS[`HSX(i-1)].U.m1, uut.uut.HASHERS[`HSX(i-1)].U.m2,
-																				 uut.uut.HASHERS[`HSX(i-2)].U.l, uut.uut.HASHERS[`HSX(i)].U.rx_w0);
-			if (cycle == (i+71)) $display ("%02u %08x %08x %08x %08x %08x (%08x)", cycle-2, uut.uut2.HASHERS[`HSX(i-3)].U.a, uut.uut2.HASHERS[`HSX(i-2)].U.e,
+																				 uut.uut.HASHERS[`HSX(i-2)].U.l, uut.uut.HASHERS[`HSX(i-1)].cur_w1);
+			if (cycle == (i+69)) $display ("%02u %08x %08x %08x %08x %08x (%08x)", cycle-2, uut.uut2.HASHERS[`HSX(i-3)].U.a, uut.uut2.HASHERS[`HSX(i-2)].U.e,
 																				 uut.uut2.HASHERS[`HSX(i-1)].U.m1, uut.uut2.HASHERS[`HSX(i-1)].U.m2,
-																				 uut.uut2.HASHERS[`HSX(i-2)].U.l, uut.uut2.HASHERS[`HSX(i)].U.rx_w0);
+																				 uut.uut2.HASHERS[`HSX(i-2)].U.l, uut.uut2.HASHERS[`HSX(i-1)].cur_w1);
 		end
 	end
 	endgenerate
 	
 	always @ (posedge clk) begin
-		if (cycle == 70) $display ("%02u %08x", cycle-2, uut.uut.tx_hash);
-		if (cycle == 139) $display ("%08x: %064x", uut.nonce, uut.uut2.tx_hash);
+		if (cycle == 69) $display ("%02u %08x", cycle-2, uut.uut.tx_hash);
+		if (cycle == 137) $display ("%08x: %064x", uut.nonce, uut.uut2.tx_hash);
 	end
 
 endmodule

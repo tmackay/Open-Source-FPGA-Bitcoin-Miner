@@ -21,6 +21,8 @@
 
 `timescale 1ns/1ps
 
+//`define SIM
+
 module fpgaminer_top (osc_clk, RxD, TxD, segment, disp_switch);
 `ifdef SERIAL_CLK
    parameter comm_clk_frequency = `SERIAL_CLK;
@@ -160,7 +162,7 @@ module fpgaminer_top (osc_clk, RxD, TxD, segment, disp_switch);
 		begin
 			// TODO: Find a more compact calculation for this
 			if (LOOP == 1)
-                golden_nonce <= nonce - 32'd138;
+                golden_nonce <= nonce - 32'd136;
 			else if (LOOP == 2)
 				golden_nonce <= nonce - 32'd66;
 			else
