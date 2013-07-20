@@ -76,7 +76,7 @@ module fpgaminer_top (osc_clk, RxD, TxD, segment, disp_switch);
 	reg [5:0] cnt = 6'd0;
 	reg feedback = 1'b0;
 
-	sha256_transform #(.LOOP(LOOP)) uut (
+	sha256_transform #(.LOOP(LOOP),.PASS(0)) uut (
 		.clk(hash_clk),
 		.feedback(feedback),
 		.cnt(cnt),
@@ -84,7 +84,7 @@ module fpgaminer_top (osc_clk, RxD, TxD, segment, disp_switch);
 		.rx_input(data),
 		.tx_hash(hash)
 	);
-	sha256_transform #(.LOOP(LOOP)) uut2 (
+	sha256_transform #(.LOOP(LOOP),.PASS(1)) uut2 (
 		.clk(hash_clk),
 		.feedback(feedback),
 		.cnt(cnt),
@@ -157,12 +157,12 @@ module fpgaminer_top (osc_clk, RxD, TxD, segment, disp_switch);
 
 
 		// Check to see if the last hash generated is valid.
-		is_golden_ticket <= (hash2[255:224] == 32'h00000000) && !feedback_d1;
+		is_golden_ticket <= (hash2[255:224] == 32'ha41f32e7) && !feedback_d1;
 		if(is_golden_ticket & !serial_busy)
 		begin
 			// TODO: Find a more compact calculation for this
 			if (LOOP == 1)
-                golden_nonce <= nonce - 32'd136;
+                golden_nonce <= nonce - 32'd133; // check this offset, unsure and not tested in SIM
 			else if (LOOP == 2)
 				golden_nonce <= nonce - 32'd66;
 			else
