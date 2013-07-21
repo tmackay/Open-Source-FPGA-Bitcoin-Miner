@@ -1,0 +1,131 @@
+# -------------------------------------------------------------------------- #
+#
+# Copyright (C) 1991-2013 Altera Corporation
+# Your use of Altera Corporation's design tools, logic functions 
+# and other software and tools, and its AMPP partner logic 
+# functions, and any output files from any of the foregoing 
+# (including device programming or simulation files), and any 
+# associated documentation or information are expressly subject 
+# to the terms and conditions of the Altera Program License 
+# Subscription Agreement, Altera MegaCore Function License 
+# Agreement, or other applicable license agreement, including, 
+# without limitation, that your use is for the sole purpose of 
+# programming logic devices manufactured by Altera and sold by 
+# Altera or its authorized distributors.  Please refer to the 
+# applicable agreement for further details.
+#
+# -------------------------------------------------------------------------- #
+#
+# Quartus II 64-Bit
+# Version 13.0.0 Build 156 04/24/2013 SJ Web Edition
+# Date created = 12:47:52  June 22, 2013
+#
+# -------------------------------------------------------------------------- #
+#
+# Notes:
+#
+# 1) The default values for assignments are stored in the file:
+#		fpgaminer_top_assignment_defaults.qdf
+#    If this file doesn't exist, see file:
+#		assignment_defaults.qdf
+#
+# 2) Altera recommends that you do not modify this file. This
+#    file is updated automatically by the Quartus II software
+#    and any changes you make may be lost or overwritten.
+#
+# -------------------------------------------------------------------------- #
+
+# TTL level serial on the 40-pin connector GPIO0 JP1: pin 1 = rxd, pin 2 = txd
+#set_location_assignment PIN_A8 -to RxD
+#set_location_assignment PIN_D3 -to TxD
+
+# Alternate interface used by kramble
+# Pin_D3 GPIO_00 End pin, JP1 outside row
+set_location_assignment PIN_D3 -to RxD
+# Pin_C3 GPIO_01 Second to end pin, JP1 outside row
+set_location_assignment PIN_C3 -to TxD
+
+set_global_assignment -name FAMILY "Cyclone IV E"
+set_global_assignment -name DEVICE EP4CE22F17C7
+set_global_assignment -name TOP_LEVEL_ENTITY fpgaminer_top
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION "10.0 SP1"
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "17:52:09  MAY 05, 2011"
+set_global_assignment -name LAST_QUARTUS_VERSION 13.0
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 7
+set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 1
+set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "2.5 V"
+set_location_assignment PIN_R8 -to osc_clk
+set_location_assignment PIN_A15 -to LEDS_out[0]
+set_location_assignment PIN_A11 -to LEDS_out[3]
+set_location_assignment PIN_A13 -to LEDS_out[1]
+set_location_assignment PIN_B13 -to LEDS_out[2]
+set_location_assignment PIN_D1 -to LEDS_out[4]
+set_location_assignment PIN_F3 -to LEDS_out[5]
+set_location_assignment PIN_B1 -to LEDS_out[6]
+set_location_assignment PIN_L3 -to LEDS_out[7]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to LEDS_out[7]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to LEDS_out[6]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to LEDS_out[5]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to LEDS_out[4]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to LEDS_out[3]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to LEDS_out[2]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to LEDS_out[1]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to LEDS_out[0]
+set_instance_assignment -name SLEW_RATE 0 -to LEDS_out[7]
+set_instance_assignment -name SLEW_RATE 0 -to LEDS_out[6]
+set_instance_assignment -name SLEW_RATE 0 -to LEDS_out[5]
+set_instance_assignment -name SLEW_RATE 0 -to LEDS_out[3]
+set_instance_assignment -name SLEW_RATE 0 -to LEDS_out[4]
+set_instance_assignment -name SLEW_RATE 0 -to LEDS_out[2]
+set_instance_assignment -name SLEW_RATE 0 -to LEDS_out[0]
+set_instance_assignment -name SLEW_RATE 0 -to LEDS_out[1]
+set_instance_assignment -name SLEW_RATE 0 -to TxD
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to TxD
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to RxD
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to osc_clk
+set_global_assignment -name ENABLE_SIGNALTAP OFF
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "NO HEAT SINK WITH 400 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+set_global_assignment -name ALLOW_ANY_RAM_SIZE_FOR_RECOGNITION ON
+set_global_assignment -name ALLOW_ANY_SHIFT_REGISTER_SIZE_FOR_RECOGNITION ON
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name LL_ROOT_REGION ON -section_id "Root Region"
+set_global_assignment -name LL_MEMBER_STATE LOCKED -section_id "Root Region"
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY quartus_output
+set_global_assignment -name REMOVE_REDUNDANT_LOGIC_CELLS ON
+set_global_assignment -name ALLOW_ANY_ROM_SIZE_FOR_RECOGNITION ON
+set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (Verilog)"
+set_global_assignment -name EDA_MAP_ILLEGAL_CHARACTERS OFF -section_id eda_simulation
+set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
+set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
+set_global_assignment -name EDA_ENABLE_GLITCH_FILTERING OFF -section_id eda_simulation
+set_global_assignment -name EDA_WRITE_NODES_FOR_POWER_ESTIMATION OFF -section_id eda_simulation
+set_global_assignment -name POWER_USE_PVA OFF
+set_global_assignment -name POWER_DEFAULT_TOGGLE_RATE 65%
+set_global_assignment -name VERILOG_SHOW_LMF_MAPPING_MESSAGES OFF
+set_global_assignment -name VERILOG_MACRO "CONFIG_LOOP_LOG2=0"
+set_global_assignment -name PHYSICAL_SYNTHESIS_COMBO_LOGIC OFF
+set_global_assignment -name PHYSICAL_SYNTHESIS_REGISTER_RETIMING OFF
+set_global_assignment -name PHYSICAL_SYNTHESIS_REGISTER_DUPLICATION OFF
+set_global_assignment -name PHYSICAL_SYNTHESIS_COMBO_LOGIC_FOR_AREA OFF
+set_global_assignment -name VERILOG_MACRO "CONFIG_LOOP_LOG2=2"
+set_global_assignment -name EDA_TEST_BENCH_ENABLE_STATUS TEST_BENCH_MODE -section_id eda_simulation
+set_global_assignment -name EDA_NATIVELINK_SIMULATION_TEST_BENCH test_fpgaminer_top -section_id eda_simulation
+set_global_assignment -name EDA_TEST_BENCH_NAME test_fpgaminer_top -section_id eda_simulation
+set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id test_fpgaminer_top
+set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME test_fpgaminer_top -section_id test_fpgaminer_top
+set_global_assignment -name EDA_TEST_BENCH_FILE test_fpgaminer_top.v -section_id test_fpgaminer_top
+set_global_assignment -name POWER_DEFAULT_INPUT_IO_TOGGLE_RATE 115200TRANSITIONS/S
+set_global_assignment -name SDC_FILE ../DE2_115_makomk_mod/fpgaminer.sdc
+set_global_assignment -name VERILOG_FILE fpgaminer_top.v
+set_global_assignment -name VERILOG_FILE main_pll.v
+set_global_assignment -name VERILOG_FILE microcore.v
+set_global_assignment -name VERILOG_FILE ../DE2_115_makomk_serial_109mhz_cgminer/serial.v
+set_global_assignment -name VERILOG_FILE "../../src/sha-256-functions.v"
+set_global_assignment -name VERILOG_FILE ../KC705_experimental/uart_receiver.v
+set_global_assignment -name VERILOG_FILE ../KC705_experimental/uart_transmitter.v
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
