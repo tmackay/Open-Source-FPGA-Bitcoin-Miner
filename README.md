@@ -1,6 +1,9 @@
 Open-Source FPGA Bitcoin Miner
 ==============================
 
+Forked by tmackay to experiment with a few different core designs
+and interfaces.
+
 A fork by teknohog to enable platform independence, serial port
 communications and clustering. My projecs include
 
