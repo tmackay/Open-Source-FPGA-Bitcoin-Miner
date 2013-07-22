@@ -26,9 +26,6 @@
 // A quick define to help index 32-bit words inside a larger register.
 `define IDX(x) (((x)+1)*(32)-1):((x)*(32))
 
-// Extra registers to marginally reduce critical path, but increase area - might keep this, seems superior
-`define EXTRAREGS
-
 module microcore # (parameter N = 0) (
   input clk,
   input [7:0] cnt,
@@ -46,34 +43,21 @@ module microcore # (parameter N = 0) (
   wire [31:0] r7, r15, s0_w, s1_w;
   // Core regs
   reg [31:0] a, b, c, e, f, g, l, m1, m2;
-`ifdef EXTRAREGS
   reg [31:0] k, ak;
-`endif
 
   // Expander
-`ifdef EXTRAREGS
   reg [31:0] oo, ot;
   shifter_32b #(.LENGTH(5)) r3_7 (clk, r1, r7);
   s1 s1_blk (r1, s1_w);
-`else
-  reg [31:0] r2;
-  shifter_32b #(.LENGTH(5)) r3_7 (clk, r2, r7);
-  s1 s1_blk (r2, s1_w);
-`endif
 
   shifter_32b #(.LENGTH(8)) r8_15 (clk, r7, r15);
   
   s0 s0_blk (r15, s0_w);
 
   always @ (posedge clk) begin
-`ifdef EXTRAREGS
     oo <= s0_w + s1_w;
 	ot <= r16 + r7;
     if (cnt>15) r1 <= oo + ot;
-`else
-	r2 <= r1;
-    if (cnt>15) r1 <= s0_w + s1_w + r16 + r7;
-`endif
 
 	else if ((pass==0) && (cnt==3)) r1 <= r1_in + N; // add nonce offset for core N
 	else if ((pass==1) && (cnt==0)) r1 <= a + m7;
@@ -85,11 +69,7 @@ module microcore # (parameter N = 0) (
 
   // SHA-2 Core
   wire [31:0] b_w, g_w, ch_o, maj_o, e0_o, e1_o;
-`ifdef EXTRAREGS
   assign b_w = (cnt>2)? a : (cnt==0)? midstate[`IDX(3)] : (cnt==1)? midstate[`IDX(2)] : midstate[`IDX(1)];
-`else
-  assign b_w = (cnt>2)? b : (cnt==1)? midstate[`IDX(3)] : (cnt==2)? midstate[`IDX(2)] : b;
-`endif
   assign g_w = (cnt==1)? midstate[`IDX(7)] : g;
   
   e0 e0_blk (a, e0_o);
@@ -99,20 +79,13 @@ module microcore # (parameter N = 0) (
   maj maj_blk (a, b, c, maj_o);
 
   always @ (posedge clk) begin
-`ifdef EXTRAREGS
 	if (cnt<64) begin
 	  k <= k_in;
 	  ak <= b_w + k_in;
     end
-`endif
 
-`ifdef EXTRAREGS
 	m1 <= r1 + ak + g_w;
 	m2 <= r1 + k + g_w;
-`else
-	m1 <= r1 + k_in + g_w + b_w;
-	m2 <= r1 + k_in + g_w;
-`endif
 
 	if (cnt==1) begin
 	  e <= midstate[`IDX(4)];
