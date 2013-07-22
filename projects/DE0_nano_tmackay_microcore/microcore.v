@@ -26,7 +26,7 @@
 // A quick define to help index 32-bit words inside a larger register.
 `define IDX(x) (((x)+1)*(32)-1):((x)*(32))
 
-// Extra registers to marginally reduce critical path, but increase area
+// Extra registers to marginally reduce critical path, but increase area - might keep this, seems superior
 `define EXTRAREGS
 
 module microcore # (parameter N = 0) (
@@ -43,7 +43,7 @@ module microcore # (parameter N = 0) (
   reg [31:0] w[0:6]; // buffer for core loopback. Dual input, single output stack/order reversing buffer. Probably a better way to implement this.
   // Expander regs
   reg [31:0] r1, r16;
-  wire [31:0] r7, r15, s0_w, s1_w, csa0_oo, csa0_ot, csa1_oo, csa1_ot;
+  wire [31:0] r7, r15, s0_w, s1_w;
   // Core regs
   reg [31:0] a, b, c, e, f, g, l, m1, m2;
 `ifdef EXTRAREGS
@@ -64,17 +64,15 @@ module microcore # (parameter N = 0) (
   shifter_32b #(.LENGTH(8)) r8_15 (clk, r7, r15);
   
   s0 s0_blk (r15, s0_w);
-  csa csa0 (s0_w, r16, r7, csa0_oo, csa0_ot);
-  csa csa1 (s1_w, csa0_oo, csa0_ot, csa1_oo, csa1_ot);
 
   always @ (posedge clk) begin
 `ifdef EXTRAREGS
-    oo <= csa1_oo;
-	ot <= csa1_ot;
+    oo <= s0_w + s1_w;
+	ot <= r16 + r7;
     if (cnt>15) r1 <= oo + ot;
 `else
 	r2 <= r1;
-    if (cnt>15) r1 <= csa1_oo + csa1_ot;
+    if (cnt>15) r1 <= s0_w + s1_w + r16 + r7;
 `endif
 
 	else if ((pass==0) && (cnt==3)) r1 <= r1_in + N; // add nonce offset for core N
@@ -86,22 +84,14 @@ module microcore # (parameter N = 0) (
   end
 
   // SHA-2 Core
-  wire [31:0] b_w, g_w, csa_in0_oo, csa_in0_ot, csa_in1_oo, csa_in1_ot, csa_m1_oo, csa_m1_ot, csa_m2_oo, csa_m2_ot, csa_l_oo, csa_l_ot, ch_o, maj_o, e0_o, e1_o;
+  wire [31:0] b_w, g_w, ch_o, maj_o, e0_o, e1_o;
 `ifdef EXTRAREGS
   assign b_w = (cnt>2)? a : (cnt==0)? midstate[`IDX(3)] : (cnt==1)? midstate[`IDX(2)] : midstate[`IDX(1)];
-  csa csa_in0 (r1, k, g_w, csa_in0_oo, csa_in0_ot);
-  csa csa_in1 (r1, ak, g_w, csa_in1_oo, csa_in1_ot);
 `else
   assign b_w = (cnt>2)? b : (cnt==1)? midstate[`IDX(3)] : (cnt==2)? midstate[`IDX(2)] : b;
-  csa csa_in0 (r1, k_in, g_w, csa_in0_oo, csa_in0_ot);
-  csa csa_in1 (b_w, csa_in0_oo, csa_in0_ot, csa_in1_oo, csa_in1_ot);
 `endif
   assign g_w = (cnt==1)? midstate[`IDX(7)] : g;
   
-  csa csa_m1 (m1, ch_o, e1_o, csa_m1_oo, csa_m1_ot);
-  csa csa_m2 (m2, ch_o, e1_o, csa_m2_oo, csa_m2_ot);
-  csa csa_l (l, maj_o, e0_o, csa_l_oo, csa_l_ot);
-
   e0 e0_blk (a, e0_o);
   e1 e1_blk (e, e1_o);
   
@@ -115,15 +105,21 @@ module microcore # (parameter N = 0) (
 	  ak <= b_w + k_in;
     end
 `endif
-	m1 <= csa_in1_oo + csa_in1_ot;
-	m2 <= csa_in0_oo + csa_in0_ot;
+
+`ifdef EXTRAREGS
+	m1 <= r1 + ak + g_w;
+	m2 <= r1 + k + g_w;
+`else
+	m1 <= r1 + k_in + g_w + b_w;
+	m2 <= r1 + k_in + g_w;
+`endif
 
 	if (cnt==1) begin
 	  e <= midstate[`IDX(4)];
 	  f <= midstate[`IDX(5)];
 	  g <= midstate[`IDX(6)];
 	end else begin
-	  e <= csa_m1_oo + csa_m1_ot;	
+	  e <= m1 + ch_o + e1_o;
 	  f <= e;
       g <= f;
     end
@@ -133,12 +129,12 @@ module microcore # (parameter N = 0) (
 	  b <= midstate[`IDX(1)];
 	  c <= midstate[`IDX(2)];
 	end else begin
-	  a <= csa_l_oo + csa_l_ot;
+	  a <= l + maj_o + e0_o;
 	  b <= a;
       c <= b;
     end
 
-	l <= csa_m2_oo + csa_m2_ot;
+	l <= m2 + ch_o + e1_o;
 
 `ifdef SIM
 	$display ("%02u %08x %08x %08x %08x %08x (%08x)", cnt, a, e, m1, m2, l, r1);
@@ -193,22 +189,6 @@ module shifter_32b # (
 					r <= prev;
 			end
 			assign val_out = TAPS[LENGTH-1].r;
-		end
-	endgenerate
-endmodule
-
-module csa (a,b,c,oo,ot);
-parameter WIDTH = 32;
-input [WIDTH-1:0] a,b,c;
-output [WIDTH-1:0] oo,ot;
-	assign oo[0] = a[0] ^ b[0] ^ c[0];
-	assign ot[0] = 0;
-
-	genvar i;
-	generate
-		for (i=1; i<WIDTH; i=i+1) begin : cmp
-			assign oo[i] = a[i] ^ b[i] ^ c[i];
-			assign ot[i] = (a[i-1] & b[i-1]) | (a[i-1] & c[i-1]) | (b[i-1] & c[i-1]);			
 		end
 	endgenerate
 endmodule
