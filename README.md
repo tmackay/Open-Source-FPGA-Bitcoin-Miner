@@ -4,6 +4,25 @@ Open-Source FPGA Bitcoin Miner
 Forked by tmackay to experiment with a few different core designs
 and interfaces.
 
+Current results
+Both microcore using the Dadda et al intermediate regs and the
+unrolled version reduce the critical path allowing for higher
+Fmax, however increased resource use and faster clocks mean a
+double penalty for power consumption. So no real improvement.
+Also, multi-microcore designs don't match the density of a single
+unrolled core as hoped. Further optimisation may be possible.
+
+Future directions
+Power efficiency may be further improved by reducing unnecessary
+shifting of the state registers. Instead of adding the new value
+and shifting all older values down, we could use multiplexers so
+that a single reg is updated containing the new value, replacing
+the oldest value. Once the state value is written, it can stay
+in place until no longer needed rather than shifting it mutiple
+times. This should result in state registers transitioning every
+third (or fourth) clock cycle, instead of every cycle.
+
+...
 A fork by teknohog to enable platform independence, serial port
 communications and clustering. My projecs include
 
